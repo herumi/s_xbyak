@@ -56,6 +56,7 @@ def miscTest():
   vfpclassps(k5|k3, yword_b (rax+64), 5)
 
 def runTest():
+  vfpclassps(k5|k3, yword_b (rax+64), 5)
   pass
 
 def main():
@@ -63,15 +64,17 @@ def main():
   maskTest()
 
   parser = getDefaultParser()
+  parser.add_argument('-run', help='run runTest', action='store_true')
   global param
   param = parser.parse_args()
 
   init(param)
   segment('text')
 
-#  runTest()
-
-  miscTest()
+  if param.run:
+    runTest()
+  else:
+    miscTest()
 
   term()
 

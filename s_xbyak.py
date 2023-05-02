@@ -451,6 +451,10 @@ class StackFrame:
         movups(ptr(rsp + self.P - (i+1) * simdSize), Xmm(maxFreeN+i))
       elif vType == T_XMM:
         vmovups(ptr(rsp + self.P - (i+1) * simdSize), Xmm(maxFreeN+i))
+      elif vType == T_YMM:
+        vmovups(ptr(rsp + self.P - (i+1) * simdSize), Ymm(maxFreeN+i))
+      elif vType == T_ZMM:
+        vmovups(ptr(rsp + self.P - (i+1) * simdSize), Zmm(maxFreeN+i))
     for i in range(pNum):
       self.p.append(self.getRegIdx())
     for i in range(tNum):
@@ -460,6 +464,19 @@ class StackFrame:
     if self.useRDX and getRdxPos() < pNum:
       mov(r11, rdx)
   def close(self, callRet=True):
+    # restore SIMD registers
+    for i in range(saveSimdN):
+      if vType == T_SSE:
+        movups(Xmm(maxFreeN+i), ptr(rsp + self.P - (i+1) * simdSize))
+      elif vType == T_XMM:
+        vmovups(Xmm(maxFreeN+i), ptr(rsp + self.P - (i+1) * simdSize))
+      elif vType == T_YMM:
+        vmovups(Ymm(maxFreeN+i), ptr(rsp + self.P - (i+1) * simdSize))
+      elif vType  == T_ZMM:
+        vmovups(Zmm(maxFreeN+i), ptr(rsp + self.P - (i+1) * simdSize))
+    if saveSimdN > 0 and vType in [T_XMM, T_YMM, T_ZMM]:
+      vzeroupper()
+
     if self.P > 0:
       add(rsp, self.P)
     noSaveNum = getNoSaveNum()
