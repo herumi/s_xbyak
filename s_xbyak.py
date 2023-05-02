@@ -424,7 +424,6 @@ class StackFrame:
     allRegNum = pNum + tNum + (1 if useRDX else 0) + (1 if useRCX else 0)
     noSaveNum = getNoSaveNum()
     self.saveNum = max(0, allRegNum - noSaveNum)
-    print('saveNum', self.saveNum)
     tbl = getRegTbl()[noSaveNum:]
     for i in range(self.saveNum):
       push(tbl[i])
