@@ -30,9 +30,12 @@ def getLine():
 
 T_REG = 0
 T_FPU = 1
-T_XMM = 2 # contains ymm, zmm
-T_MASK = 3 # k1, k2, ...
-T_ATTR = 4
+T_SSE = 2
+T_XMM = 3 # contains ymm, zmm
+T_YMM = 4
+T_ZMM = 5
+T_MASK = 6 # k1, k2, ...
+T_ATTR = 7
 
 # attr
 # one of (sae, rn, rd, ru, rz) or zero
@@ -79,7 +82,7 @@ class Operand:
 
     # xmm4|k3, k1|k2
     s = '%' if g_gas else ''
-    if self.kind == T_XMM:
+    if self.bit >= 128:
       if self.bit == 128:
         s += 'x'
       elif self.bit == 256:
@@ -147,9 +150,19 @@ class Reg(Operand):
     super().__init__(idx, bit, T_REG)
 
 class Xmm(Reg):
-  def __init__(self, idx, bit):
-    super().__init__(idx, bit)
+  def __init__(self, idx):
+    super().__init__(idx, 128)
     self.kind = T_XMM
+
+class Ymm(Reg):
+  def __init__(self, idx):
+    super().__init__(idx, 256)
+    self.kind = T_YMM
+
+class Zmm(Reg):
+  def __init__(self, idx):
+    super().__init__(idx, 512)
+    self.kind = T_ZMM
 
 class MaskReg(Reg):
   def __init__(self, idx):
@@ -344,10 +357,10 @@ r14b = Reg(R14, 8)
 r15b = Reg(R15, 8)
 
 # define xmm, ymm, zmm registers
-for (p, bit) in [('x', 128), ('y', 256), ('z', 512)]:
+for (p, cstr) in [('x', Xmm), ('y', Ymm), ('z', Zmm)]:
   for idx in range(32):
-    globals()[f'{p}mm{idx}'] = Xmm(idx, bit)
-    globals()[f'{p}m{idx}'] = Xmm(idx, bit)
+    globals()[f'{p}mm{idx}'] = cstr(idx)
+    globals()[f'{p}m{idx}'] = cstr(idx)
 
 # define mask registers k0, ..., k7
 for i in range(8):
@@ -380,20 +393,50 @@ def getRdxPos():
 def getNoSaveNum():
   return 6 if win64ABI else 8
 
+def getSimdSize(vType):
+  if vType == 0: return 0
+  if vType == T_SSE: return 16
+  if vType == T_XMM: return 16
+  if vType == T_YMM: return 32
+  if vType == T_ZMM: return 64
+  raise Exception('bad vType', vType)
+
 class StackFrame:
-  def __init__(self, pNum, tNum = 0, useRDX=False, useRCX=False, stackSizeByte=0, callRet=True):
+  def __init__(self, pNum, tNum=0, useRDX=False, useRCX=False, stackSizeByte=0, callRet=True, vNum=0, vType=0):
+    """
+      make a stackframe of a generated function
+      pNum : # of function arguments assigned to self.p[pNum]
+      tNum : # of temporary registers asigned to self.t[tNum]
+      useRDX : set True if you want to use rdx
+      useRCX : set True if you want to use rcx
+      stackSizeByte : stack for local variables assigned to rsp[stackSizeByte]
+      callRet : automatically restore registers and call ret()
+      vNum : # of SIMD registers
+      vType : SIMD type (T_SSE, T_XMM, T_YMM, T_ZMM)
+    """
     self.pos = 0
     self.useRDX = useRDX
     self.useRCX = useRCX
     self.callRet = callRet
     self.p = []
     self.t = []
+    self.v = []
     allRegNum = pNum + tNum + (1 if useRDX else 0) + (1 if useRCX else 0)
     noSaveNum = getNoSaveNum()
     self.saveNum = max(0, allRegNum - noSaveNum)
     tbl = getRegTbl()[noSaveNum:]
     for i in range(self.saveNum):
       push(tbl[i])
+
+    # restore SIMD registers
+    if vNum > 0 and vType == 0:
+      raise Exception('specify vType')
+
+    maxFreeN = 5 if win64ABI else 7
+    saveSimdN = max(vNum - maxFreeN, 0)
+    simdSize = getSimdSize(vType)
+
+    stackSizeByte += saveSimdN * simdSize
     self.P = (stackSizeByte + 7) // 8
     # 16 byte alignment
     if self.P > 0 and (self.P & 1) == (self.saveNum & 1):
@@ -401,6 +444,13 @@ class StackFrame:
     self.P *= 8
     if self.P > 0:
       sub(rsp, self.P)
+
+    # store SIMD registers
+    for i in range(saveSimdN):
+      if vType == T_SSE:
+        movups(ptr(rsp + self.P - (i+1) * simdSize), Xmm(maxFreeN+i))
+      elif vType == T_XMM:
+        vmovups(ptr(rsp + self.P - (i+1) * simdSize), Xmm(maxFreeN+i))
     for i in range(pNum):
       self.p.append(self.getRegIdx())
     for i in range(tNum):
