@@ -56,8 +56,10 @@ def miscTest():
   vfpclassps(k5|k3, yword_b (rax+64), 5)
 
 def runTest():
-  vfpclassps(k5|k3, yword_b (rax+64), 5)
-  pass
+  for i in range(18):
+    with StackFrame(1, vNum=8, stackSizeByte=i, vType=T_YMM) as sf:
+      mov(eax, i)
+      pass
 
 def main():
   # before calling init()
