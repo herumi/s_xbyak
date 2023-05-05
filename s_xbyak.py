@@ -1,5 +1,7 @@
 # static version of xbyak
 # This file provides a xbyak-like DSL to generate a asm code for nasm/yasm/gas .
+import struct
+
 RAX = 0
 RCX = 1
 RDX = 2
@@ -737,7 +739,13 @@ class FuncProc:
   def __exit__(self, ex_type, ex_value, trace):
     self.close()
 
-def makeVar(name, bit, v, const=False, static=False):
+def float2uint32(v):
+  return int(struct.pack('>f', v).hex(),16)
+
+def double2uint64(v):
+  return int(struct.pack('>d', v).hex(),16)
+
+def makeVar(name, bit, v, const=False, static=False, base=10):
   if not static:
     global_(name)
   makeLabel(name)
@@ -753,7 +761,12 @@ def makeVar(name, bit, v, const=False, static=False):
   for i in range(n):
     if i > 0:
       s += ', '
-    s += str(v & mask)
+    if base == 10:
+      s += str(v & mask)
+    elif base == 16:
+      s += hex(v & mask)
+    else:
+      raise Exception('bad base', base)
     v >>= L
   output(s)
 
