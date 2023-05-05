@@ -233,6 +233,15 @@ class Address:
     self.ripLabel = None
     self.broadcast = broadcast
     self.broadcastRate = 0
+  def copy(self):
+    r = Address()
+    r.exp = self.exp
+    r.bit = self.bit
+    r.ripLabel = self.ripLabel
+    r.broadcast = self.broadcast
+    r.broadcastRate = self.broadcastRate
+    return r
+
   def setRip(self, label):
     self.ripLabel = label
 
@@ -246,25 +255,28 @@ class Address:
       return f'{{1to{self.broadcastRate}}}'
     return ''
   def __str__(self):
+    maskStr = ''
+    if hasattr(self, 'k') and self.k.idx > 0:
+      maskStr = f'{{{self.k}}}'
     if self.ripLabel:
       if g_gas:
-        return f'{self.ripLabel}(%rip)'
+        return f'{self.ripLabel}(%rip){maskStr}'
       if g_masm:
-        return f'offset {self.ripLabel}'
-      return f'[rel {self.ripLabel}]'
+        return f'offset {self.ripLabel}{maskStr}'
+      return f'[rel {self.ripLabel}]{maskStr}'
     if g_gas:
       if type(self.exp) == Reg:
         s = '(' + str(self.exp) + ')'
       else:
         s = str(self.exp)
-      s += self.getBroadcastStr()
+      s += self.getBroadcastStr() + maskStr
       return s
     s = '[' + str(self.exp) + ']'
     if g_nasm:
       tbl = { 128 : 'oword', 256 : 'yword', 512 : 'zword' }
       if self.bit > 64:
         s = tbl[self.bit] + ' ' + s
-      return s + self.getBroadcastStr()
+      return s + self.getBroadcastStr() + maskStr
     # g_masm
     tbl = { 32 : 'd', 64 : 'q', 128 : 'xmm', 256 : 'ymm', 512 : 'zmm' }
     if self.broadcast:
@@ -272,11 +284,25 @@ class Address:
       # https://developercommunity.visualstudio.com/t/ml64exe-cant-deal-with-vcvtpd2dq-xmm0/10352105
       if hasattr(self, 'bitForAddress'):
         s = f'{tbl[self.bitForAddress]}word ptr ' + s
-      return f'{tbl[self.bit]}word bcst ' + s
+      s = f'{tbl[self.bit]}word bcst ' + s
     else:
       if self.bit > 64:
         s = f'{tbl[self.bit]}word ptr ' + s
-      return s
+    return s + maskStr
+
+  def __or__(self, rhs):
+    if rhs.kind == T_MASK:
+      r = self.copy()
+      r.k = rhs
+      return r
+#    elif rhs.kind == T_ATTR:
+#      r = self.copy()
+#      r.attr = mergeAttr(r.attr, rhs.attr)
+#      if hasattr(rhs, 'k'):
+#        r.k = rhs.k
+#      return r
+    else:
+      raise Exception('bad arg', k)
 
 def ptr(exp):
   return Address(exp)

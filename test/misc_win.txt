@@ -36,3 +36,4 @@ vcvtpd2dq xmm19, [eax+32]{1to4}
 vfpclassps k5{k3}, zword [rax+64], 5
 vfpclasspd k5{k3}, [rax+64]{1to2}, 5
 vfpclassps k5{k3}, [rax+64]{1to8}, 5
+vmovups [rax+rcx*4+123]{k1}, zmm0

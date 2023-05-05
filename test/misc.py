@@ -55,6 +55,8 @@ def miscTest():
   vfpclasspd(k5|k3, xword_b (rax+64), 5)
   vfpclassps(k5|k3, yword_b (rax+64), 5)
 
+  vmovups(ptr(rax+rcx*4+123)|k1, zmm0)
+
 def runTest():
   for i in range(18):
     with StackFrame(1, vNum=8, stackSizeByte=i, vType=T_YMM) as sf:

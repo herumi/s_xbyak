@@ -38,3 +38,4 @@ vcvtpd2dq 32(%eax){1to4}, %xmm19
 vfpclasspsz $5, 64(%rax), %k5{%k3}
 vfpclasspd $5, 64(%rax){1to2}, %k5{%k3}
 vfpclassps $5, 64(%rax){1to8}, %k5{%k3}
+vmovups %zmm0, 123(%rax,%rcx,4){%k1}
