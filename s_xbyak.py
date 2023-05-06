@@ -289,6 +289,13 @@ class Address:
       if self.bit > 64:
         s = f'{tbl[self.bit]}word ptr ' + s
     return s + maskStr
+  def addOffset(self, offset):
+    r = self.copy()
+    if r.ripLabel:
+      r.ripLabel += '+' + str(offset)
+    else:
+      r.exp = self.exp + offset
+    return r
 
   def __or__(self, rhs):
     if rhs.kind == T_MASK:
