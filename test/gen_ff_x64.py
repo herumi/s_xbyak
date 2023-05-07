@@ -209,7 +209,7 @@ def gen_mul(name, mont):
       t = sf.t[N+1]
       t2 = sf.t[N+2]
 
-      lea(rax, rip('PRE(p)'))
+      lea(rax, ptr(rip+'PRE(p)'))
       for i in range(N):
         mov(rdx, ptr(py + i * 8))
         montgomery1(mont, pk, px, rax, t, t2, i == 0)

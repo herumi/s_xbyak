@@ -230,20 +230,15 @@ class Address:
   def __init__(self, exp=None, bit=0, broadcast=False):
     self.exp = exp
     self.bit = bit
-    self.ripLabel = None
     self.broadcast = broadcast
     self.broadcastRate = 0
   def copy(self):
     r = Address()
     r.exp = self.exp
     r.bit = self.bit
-    r.ripLabel = self.ripLabel
     r.broadcast = self.broadcast
     r.broadcastRate = self.broadcastRate
     return r
-
-  def setRip(self, label):
-    self.ripLabel = label
 
   # compute X of {1toX} by bitSize and T_B64, T_B32.
   def setBroadcastRage(self, name, bitSize):
@@ -258,12 +253,8 @@ class Address:
     maskStr = ''
     if hasattr(self, 'k') and self.k.idx > 0:
       maskStr = f'{{{self.k}}}'
-    if self.ripLabel:
-      if g_gas:
-        return f'{self.ripLabel}(%rip){maskStr}'
-      if g_masm:
-        return f'offset {self.ripLabel}{maskStr}'
-      return f'[rel {self.ripLabel}]{maskStr}'
+    if isinstance(self.exp, RipReg):
+      return f'{self.exp}{maskStr}'
     if g_gas:
       if type(self.exp) == Reg:
         s = '(' + str(self.exp) + ')'
@@ -289,13 +280,6 @@ class Address:
       if self.bit > 64:
         s = f'{tbl[self.bit]}word ptr ' + s
     return s + maskStr
-  def addOffset(self, offset):
-    r = self.copy()
-    if r.ripLabel:
-      r.ripLabel += '+' + str(offset)
-    else:
-      r.exp = self.exp + offset
-    return r
 
   def __or__(self, rhs):
     if rhs.kind == T_MASK:
@@ -310,6 +294,40 @@ class Address:
 #      return r
     else:
       raise Exception('bad arg', k)
+
+class RipReg:
+  def __init__(self, v=0):
+    if isinstance(v, int):
+      self.label = None
+      self.offset = v
+    else:
+      self.label = v
+      self.offset = 0
+
+  def __str__(self):
+    if self.offset > 0:
+      offset = f'+{self.offset}'
+    elif self.offset == 0:
+      offset = ''
+    else:
+      offset = str(self.offset)
+    if g_gas:
+      return f'{self.label}{offset}(%rip)'
+    if g_masm:
+      return f'offset {self.label}{offset}'
+    # g_nasm
+    return f'[rel {self.label}{offset}]'
+
+  def __add__(self, v):
+    r = RipReg(self.label)
+    if isinstance(v, int):
+      r.offset = self.offset + v
+    elif r.label == None:
+      r.label = v
+    else:
+      raise Exception('label is already set', r.label, v)
+    return r
+
 
 def ptr(exp):
   return Address(exp)
@@ -335,10 +353,10 @@ def yword_b(exp):
 def zword_b(exp):
   return Address(exp, bit=512, broadcast=True)
 
-def rip(label):
-  addr = Address()
-  addr.setRip(label)
-  return addr
+"""
+ptr(rip + label + offset)
+"""
+rip = RipReg()
 
 rax = Reg(RAX, 64)
 rcx = Reg(RCX, 64)

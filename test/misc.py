@@ -57,6 +57,10 @@ def miscTest():
 
   vmovups(ptr(rax+rcx*4+123)|k1, zmm0)
 
+#  vaddps(zmm0, zmm1, ptr(rip+123));
+#  vaddps(zmm0, zmm1, ptr_b(rip+123));
+#  vaddps(zmm0, zmm1, ptr_b(rax));
+
 def runTest():
   for i in range(18):
     with StackFrame(1, vNum=8, stackSizeByte=i, vType=T_YMM) as sf:

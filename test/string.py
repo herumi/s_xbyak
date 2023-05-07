@@ -50,7 +50,7 @@ def gen_findCharGeneric(name, mode):
       vmovdqa(xm0, ptr(rcx))
       mov(rcx, text)
       and_(ecx, 15)
-      lea(textSize, rip('shiftPtn'))
+      lea(textSize, ptr(rip+'shiftPtn'))
 #      mov(textSize, 'shiftPtn')
       vmovdqu(xm2, ptr(textSize + rcx))
       vpshufb(xm0, xm0, xm2)
