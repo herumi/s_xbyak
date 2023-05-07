@@ -37,8 +37,8 @@ test_string_run:
 
 SRC=mie_string_test.cpp
 
-MIE_STRING_DIR?=../../../mie_string/
-CYBOZULIB_DIR?=../../../cybozulib/
+MIE_STRING_DIR?=../../mie_string/
+CYBOZULIB_DIR?=../../cybozulib/
 CFLAGS=-O2 -DNDEBUG -mavx2 -I $(MIE_STRING_DIR) -I $(CYBOZULIB_DIR)/include
 
 VPATH=$(MIE_STRING_DIR)
