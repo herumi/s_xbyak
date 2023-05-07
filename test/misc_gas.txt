@@ -39,3 +39,9 @@ vfpclasspsz $5, 64(%rax), %k5{%k3}
 vfpclasspd $5, 64(%rax){1to2}, %k5{%k3}
 vfpclassps $5, 64(%rax){1to8}, %k5{%k3}
 vmovups %zmm0, 123(%rax,%rcx,4){%k1}
+.L1:
+vaddps .L1+128(%rip), %zmm1, %zmm0
+vaddps .L2+256(%rip), %zmm1, %zmm0
+vaddps .L1+128(%rip){1to16}, %zmm1, %zmm0
+vaddps .L2+256(%rip){1to16}, %zmm1, %zmm0
+.L2:

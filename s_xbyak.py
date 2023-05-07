@@ -253,8 +253,6 @@ class Address:
     maskStr = ''
     if hasattr(self, 'k') and self.k.idx > 0:
       maskStr = f'{{{self.k}}}'
-    if isinstance(self.exp, RipReg):
-      return f'{self.exp}{maskStr}'
     if g_gas:
       if type(self.exp) == Reg:
         s = '(' + str(self.exp) + ')'
@@ -262,7 +260,10 @@ class Address:
         s = str(self.exp)
       s += self.getBroadcastStr() + maskStr
       return s
-    s = '[' + str(self.exp) + ']'
+    if isinstance(self.exp, RipReg):
+      s = str(self.exp)
+    else:
+      s = '[' + str(self.exp) + ']'
     if g_nasm:
       tbl = { 128 : 'oword', 256 : 'yword', 512 : 'zword' }
       if self.bit > 64:
@@ -305,18 +306,24 @@ class RipReg:
       self.offset = 0
 
   def __str__(self):
-    if self.offset > 0:
-      offset = f'+{self.offset}'
-    elif self.offset == 0:
-      offset = ''
+    if self.label:
+      s = str(self.label)
     else:
-      offset = str(self.offset)
+      s = ''
+    if self.offset > 0:
+      if s != '':
+        s += '+'
+      s += str(self.offset)
+    elif self.offset < 0:
+      s += str(self.offset)
+    if s == '':
+      s = '0'
     if g_gas:
-      return f'{self.label}{offset}(%rip)'
+      return f'{s}(%rip)'
     if g_masm:
-      return f'offset {self.label}{offset}'
+      return f'{s}'
     # g_nasm
-    return f'[rel {self.label}{offset}]'
+    return f'[rel {s}]'
 
   def __add__(self, v):
     r = RipReg(self.label)
@@ -669,9 +676,9 @@ def dq_(s):
 def global_(s):
   if g_gas:
     output(f'.global PRE({s})')
-  if g_masm:
+  elif g_masm:
     output(f'public {s}')
-  if g_nasm:
+  elif g_nasm:
     output(f'_global {s}')
 def extern_(s, size):
   if g_gas:
@@ -679,7 +686,7 @@ def extern_(s, size):
   elif g_masm:
     output(f'extern {s}:{size}')
   else:
-    output(f'extern PRE({s})')
+    output(f'extern {s}')
 def makeLabel(s):
   output(addPRE(s) + ':')
 def align(n):

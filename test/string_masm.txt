@@ -66,7 +66,7 @@ and rcx, -16
 vmovdqa xmm0, xmmword ptr [rcx]
 mov rcx, r10
 and ecx, 15
-lea r11, offset shiftPtn
+lea r11, shiftPtn
 vmovdqu xmm2, xmmword ptr [r11+rcx]
 vpshufb xmm0, xmm0, xmm2
 jmp @L4
@@ -115,7 +115,7 @@ and rcx, -16
 vmovdqa xmm0, xmmword ptr [rcx]
 mov rcx, r10
 and ecx, 15
-lea r11, offset shiftPtn
+lea r11, shiftPtn
 vmovdqu xmm2, xmmword ptr [r11+rcx]
 vpshufb xmm0, xmm0, xmm2
 jmp @L11

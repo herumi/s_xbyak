@@ -132,7 +132,7 @@ push r12
 push r13
 push r14
 mov r11, rdx
-lea rax, offset PRE(p)
+lea rax, p
 mov rdx, [r8]
 mulx r10, r9, [r11]
 mulx rdi, r13, [r11+8]

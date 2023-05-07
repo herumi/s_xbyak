@@ -57,9 +57,14 @@ def miscTest():
 
   vmovups(ptr(rax+rcx*4+123)|k1, zmm0)
 
-#  vaddps(zmm0, zmm1, ptr(rip+123));
-#  vaddps(zmm0, zmm1, ptr_b(rip+123));
-#  vaddps(zmm0, zmm1, ptr_b(rax));
+  L1 = Label()
+  L2 = Label()
+  L(L1)
+  vaddps(zmm0, zmm1, ptr(rip+L1+128));
+  vaddps(zmm0, zmm1, ptr(rip+L2+256));
+  vaddps(zmm0, zmm1, ptr_b(rip+L1+128));
+  vaddps(zmm0, zmm1, ptr_b(rip+L2+256));
+  L(L2)
 
 def runTest():
   for i in range(18):

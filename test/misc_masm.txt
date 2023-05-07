@@ -26,5 +26,11 @@ vfpclassps k5{k3}, zmmword ptr [rax+64], 5
 vfpclasspd k5{k3}, qword bcst [rax+64], 5
 vfpclassps k5{k3}, dword bcst ymmword ptr [rax+64], 5
 vmovups zmmword ptr [rax+rcx*4+123]{k1}, zmm0
+@L1:
+vaddps zmm0, zmm1, zmmword ptr @L1+128
+vaddps zmm0, zmm1, zmmword ptr @L2+256
+vaddps zmm0, zmm1, dword bcst @L1+128
+vaddps zmm0, zmm1, dword bcst @L2+256
+@L2:
 _text ends
 end
