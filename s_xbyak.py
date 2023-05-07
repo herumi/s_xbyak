@@ -287,14 +287,15 @@ class Address:
       r = self.copy()
       r.k = rhs
       return r
-#    elif rhs.kind == T_ATTR:
-#      r = self.copy()
-#      r.attr = mergeAttr(r.attr, rhs.attr)
-#      if hasattr(rhs, 'k'):
-#        r.k = rhs.k
-#      return r
     else:
       raise Exception('bad arg', k)
+
+  def __add__(self, v):
+    if not isinstance(v, int):
+      raise Exception('not int', v)
+    r = self.copy()
+    r.exp = r.exp + v
+    return r
 
 class RipReg:
   def __init__(self, v=0):
