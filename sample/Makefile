@@ -3,14 +3,26 @@ PYTHON?=python3
 SRC=add.cpp
 TARGET=$(SRC:.cpp=.exe)
 
+CFLAGS=-DNDEBUG -O2
+
+NASM?=0
+
 test: $(TARGET)
 	@sh -ec 'for e in $(TARGET); do echo "run $$e"; ./$$e; done'
 
 %_s.S: %.py
+ifeq ($(NASM),1)
+	$(PYTHON) $< -m nasm > $@
+else
 	$(PYTHON) $< -m gas > $@
+endif
 
 %_s.o: %_s.S
+ifeq ($(NASM),1)
+	nasm -f elf64 -o $@ $<
+else
 	$(CXX) -c $< -o $@
+endif
 
 %.exe: %.o %_s.o
 	$(CXX) $(LDFLAGS) -o $@ $^
