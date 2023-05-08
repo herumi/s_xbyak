@@ -2,3 +2,5 @@ __pycache__
 test/a.txt
 test/b.txt
 test/c.txt
+*.obj
+*.lst
