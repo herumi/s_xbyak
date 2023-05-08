@@ -313,7 +313,10 @@ class RipReg:
 
   def __str__(self):
     if self.label:
-      s = str(self.label)
+      if g_gas and isinstance(self.label, str):
+        s = f'PRE({self.label})'
+      else:
+        s = str(self.label)
     else:
       s = ''
     if self.offset > 0:

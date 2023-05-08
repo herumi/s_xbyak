@@ -81,7 +81,7 @@ and $-16, %rcx
 vmovdqa (%rcx), %xmm0
 mov %rdi, %rcx
 and $15, %ecx
-lea shiftPtn(%rip), %rsi
+lea PRE(shiftPtn)(%rip), %rsi
 vmovdqu (%rsi,%rcx,1), %xmm2
 vpshufb %xmm2, %xmm0, %xmm0
 jmp .L4
@@ -132,7 +132,7 @@ and $-16, %rcx
 vmovdqa (%rcx), %xmm0
 mov %rdi, %rcx
 and $15, %ecx
-lea shiftPtn(%rip), %rsi
+lea PRE(shiftPtn)(%rip), %rsi
 vmovdqu (%rsi,%rcx,1), %xmm2
 vpshufb %xmm2, %xmm0, %xmm0
 jmp .L11

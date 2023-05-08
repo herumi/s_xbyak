@@ -67,10 +67,11 @@ def miscTest():
   L(L2)
 
 def runTest():
-  for i in range(18):
-    with StackFrame(1, vNum=8, stackSizeByte=i, vType=T_YMM) as sf:
-      mov(eax, i)
-      pass
+  X = 'xxx'
+  mov(rax, ptr(rip+'xxx'))
+  mov(rax, ptr(rip+X))
+  lea(rax, ptr(rip+'xxx'))
+  lea(rax, ptr(rip+X))
 
 def main():
   # before calling init()

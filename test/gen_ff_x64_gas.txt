@@ -141,7 +141,7 @@ push %r12
 push %r13
 push %r14
 mov %rdx, %r11
-lea p(%rip), %rax
+lea PRE(p)(%rip), %rax
 mov (%r11), %rdx
 mulx (%rsi), %rcx, %r8
 mulx 8(%rsi), %r13, %r9

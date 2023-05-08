@@ -1,3 +1,9 @@
+UNAME_S=$(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+ NASM_OPT=-f macho64 -DADD_UNDERSCORE
+else
+ NASM_OPT=-f elf64
+endif
 PYTHON?=python3
 DIFF_OPT=-urN
 #DIFF_OPT=-urNw # ignore all blank
@@ -52,7 +58,7 @@ MODE?=nasm
 mie_string_test.exe: string.py mie_string_test.o
 ifeq ($(MODE),nasm)
 	$(PYTHON) string.py -m nasm > string.asm
-	nasm -f elf64 string.asm
+	nasm $(NASM_OPT) string.asm
 endif
 ifeq ($(MODE),gas)
 	$(PYTHON) string.py -m gas > string.S
