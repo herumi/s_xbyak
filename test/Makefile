@@ -27,7 +27,7 @@ test1_win:
 	diff $(DIFF_OPT) $(FILE)_win.txt b.txt
 
 test1_masm:
-	$(PYTHON) $(FILE).py -win -m masm > c.txt
+	$(PYTHON) $(FILE).py -m masm > c.txt
 	diff $(DIFF_OPT) $(FILE)_masm.txt c.txt
 
 test1:

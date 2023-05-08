@@ -603,6 +603,8 @@ def init(param):
     param.mode : asm mode (nasm|masm|gas)
   """
   mode = param.mode
+  if mode == 'masm':
+    param.win = True
   setWin64ABI(param.win)
   global g_nasm, g_gas, g_masm, g_text
   g_nasm = mode == 'nasm'
