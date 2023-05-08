@@ -2,22 +2,22 @@
 
 ASM generation tool for GAS/NASM/MASM with Xbyak-like syntax in Python.
 
-## Abstract
+# Abstract
 
 This file provides an Xbyak-like DSL to generate ASM code for GAS/NASM/MASM.
 i.e., A static version of Xbyak
 
-## Supported Assembler
+# Supported Assembler
 
 - gas : GNU Assembler
 - nasm : [Netwide Assembler (NASM)](https://www.nasm.us/)
 - masm : [Microsoft Macro Assembler](https://learn.microsoft.com/vi-vn/cpp/assembler/masm/microsoft-macro-assembler-reference)
 
-## How to use
+# How to use
 
 There are several samples in the `sample/` directory.
 
-### An add function
+## An add function
 [sample/add.py](sample/add.py)
 ```python
 import sys
@@ -43,7 +43,7 @@ if __name__ == '__main__':
   main()
 ```
 
-### Commentaries:
+Commentaries:
 - `getDefaultParser()` parses some options.
   - `-win` : use Win64 ABI (default : AMD64 ABI)
   - `-m mode` : mode = gas/nasm/masm (default : nasm)
@@ -66,7 +66,7 @@ if __name__ == '__main__':
 - `term()`
   - Terminates code generation.
 
-### How to generate an ASM for GAS
+## How to generate an ASM for GAS
 
 ```
 python3 add.py -m gas > add_s.S
@@ -82,10 +82,9 @@ ret
 SIZE(add)
 ```
 
-### Commentaries:
 - `PRE`, `TYPE`, `SIZE` are macros to absorb OS differences.
 
-### How to generate an ASM for NASM
+## How to generate an ASM for NASM
 
 For Linux/Intel macOS
 ```
@@ -112,7 +111,7 @@ lea rax, [rcx+rdx]
 ret
 ```
 
-### How to generate an ASM for MASM
+## How to generate an ASM for MASM
 
 ```
 python3 add.py -m masm
@@ -127,3 +126,10 @@ add endp
 _text ends
 end
 ```
+
+# Author
+
+MITSUNARI Shigeo(herumi@nifty.com)
+
+# Sponsors welcome
+[GitHub Sponsor](https://github.com/sponsors/herumi)
