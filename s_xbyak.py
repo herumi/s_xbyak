@@ -1,6 +1,11 @@
-# static version of xbyak
-# This file provides a xbyak-like DSL to generate a asm code for nasm/yasm/gas .
+# s_xbyak : ASM generation tool for GAS/NASM/MASM with Xbyak-like syntax in Python
+# This file provides a Xbyak-like DSL to generate a asm code for nasm/yasm/gas .
+# i.e., static version of xbyak
+# Author : MITSUNARI Shigeo(@herumi)
+# License : modified new BSD license (http://opensource.org/licenses/BSD-3-Clause)
 import struct
+
+VERSION="0.1.0"
 
 RAX = 0
 RCX = 1
