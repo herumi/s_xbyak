@@ -127,6 +127,57 @@ _text ends
 end
 ```
 
+# Mnemonics
+
+Most of the mnemonics are the same as defined in the Intel manual except for `and_`, `or_`, `xor_`, `not_`, `in_`, `out_`, `int_`.
+
+# Label
+
+```python
+lpL = Label()
+nextL = Label()
+L(lpL)  # lpL is set here
+ja(nextL)
+jmp(lpL)
+L(nextL)
+```
+
+# db, dw, dd, dq
+
+Use `db_`, `dw_`, `dd_`, `dq_`.
+
+# rip
+
+```python
+makeLabel('varX')
+dq_(12345)
+mov(rax, ptr(rip+'varX'))`
+```
+
+# AVX-512
+
+- Merge-masking
+  - `vaddps(xmm1 | k1, xmm2, xmm3)`
+  - `vmovups(ptr(rax+rcx*4+123)|k1, zmm0)`
+- Zero-masking
+  - `vsubps(ymm0 | k4 | T_z, ymm1, ymm2)`
+- Broadcast
+  - `vmulps(zmm0, zmm1, ptr_b(rax))`
+  - `ptr_b` is converted to `{1toX}` according to the mnemonics.
+- Rounding
+  - `vdivps(zmm0, zmm1, zmm2|T_rz_sae)`
+- Suppress all exceptions
+  - `vmaxss(xmm1, xmm2, xmm3|T_sae)`
+- Distinguish `m128` and `m256`
+  - `vcvtpd2dq(xmm16, xword (eax+32))` # `m128`
+  - `vcvtpd2dq(xmm0, yword (eax+32))`  # `m256`
+  - `vcvtpd2dq(xmm21, ptr_b (eax+32))` # `m128` + broadcast
+  - `vcvtpd2dq(xmm19, yword_b (eax+32))` # `m256` + broadcast
+
+# License
+
+[modified new BSD License](http://opensource.org/licenses/BSD-3-Clause)
+
 # Author
 
 MITSUNARI Shigeo(herumi@nifty.com)
