@@ -6,6 +6,7 @@ zero:
 dq 0, 0, 0, 0, 0, 0
 ip:
 dq 9940570264628428797
+_data ends
 _text segment
 align 16
 mcl_fp_add proc export
