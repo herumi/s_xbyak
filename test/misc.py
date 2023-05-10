@@ -67,11 +67,23 @@ def miscTest():
   L(L2)
 
 def runTest():
+  mov(rax, '0x123+0xff+abc+a0x123')
   X = 'xxx'
   mov(rax, ptr(rip+'xxx'))
   mov(rax, ptr(rip+X))
   lea(rax, ptr(rip+'xxx'))
   lea(rax, ptr(rip+X))
+  L1 = Label()
+  L2 = Label()
+  L(L1)
+  vaddps(zmm0, zmm1, ptr(rip+L1+128))
+  vaddps(zmm0, zmm1, ptr(L1))
+  vaddps(zmm0, zmm1, ptr(rip+L2+256))
+  vaddps(zmm0, zmm1, ptr_b(rip+L1+128))
+  vaddps(zmm0, zmm1, ptr_b(L1))
+  vaddps(zmm0, zmm1, ptr_b(rip+L2+256))
+  L(L2)
+
 
 def main():
   # before calling init()

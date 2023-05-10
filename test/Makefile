@@ -41,6 +41,13 @@ test_string_run:
 	make clean
 	make mie_string_test MODE=gas
 
+run_nasm:
+	@$(PYTHON) misc.py -run -m nasm
+run_gas:
+	@$(PYTHON) misc.py -run -m gas
+run_masm:
+	@$(PYTHON) misc.py -run -m masm
+
 SRC=mie_string_test.cpp
 
 MIE_STRING_DIR?=../../mie_string/

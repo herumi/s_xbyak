@@ -4,6 +4,9 @@
 # Author : MITSUNARI Shigeo(@herumi)
 # License : modified new BSD license (http://opensource.org/licenses/BSD-3-Clause)
 import struct
+import re
+
+RE_HEX_STR=r'\b0x([0-9a-f]+)\b'
 
 VERSION="0.1.0"
 
@@ -766,11 +769,15 @@ def term():
     # QQQ (bad knowhow) remove unnecessary pattern
     if g_gas and s == 'mov %rdx, %r11' and g_text[i+1] == 'mov %r11, %rdx':
       i += 2
-    elif not g_gas and s == 'mov r11, rdx' and g_text[i+1] == 'mov rdx, r11':
+      continue
+    if not g_gas and s == 'mov r11, rdx' and g_text[i+1] == 'mov rdx, r11':
       i += 2
-    else:
-      print(s)
-      i += 1
+      continue
+    if g_masm:
+      ## convert 0x123a => 123ah
+      s = re.sub(RE_HEX_STR, r'\1h', s)
+    print(s)
+    i += 1
 
 def defineName(name):
   global_(name)
