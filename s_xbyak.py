@@ -690,8 +690,10 @@ def dq_(s):
 def global_(s):
   if g_gas:
     output(f'.global PRE({s})')
+#    output(f'{s}:')
   elif g_masm:
     output(f'public {s}')
+    output(f'{s}:')
   elif g_nasm:
     output(f'_global {s}')
 def extern_(s, size):
@@ -860,10 +862,14 @@ def genFunc(name):
     # special case (mov reg, label)
     if name == 'mov' and (isinstance(args[1], str) or isinstance(args[1], Label)):
       if g_gas:
-        output(f'movabs ${args[1]}, {adPRE(args[0])}')
+        if isinstance(args[1], str):
+          s = f'{addPRE(args[1])}'
+        else:
+          s = str(args[1])
+        output(f'movabs {s}, {args[0]}')
         return
       if g_masm:
-        output(f'mov {argv[0]}, offset {argv[1]}')
+        output(f'mov {args[0]}, offset {args[1]}')
         return
     if not args:
       return output(name)

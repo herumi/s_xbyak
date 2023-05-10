@@ -33,6 +33,7 @@ db 128
 db 128
 db 128
 db 128
+_data ends
 _text segment
 mie_findCharAnyAVX proc export
 mov r10, rcx

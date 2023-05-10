@@ -67,12 +67,11 @@ def miscTest():
   L(L2)
 
 def runTest():
-  mov(rax, '0x123+0xff+abc+a0x123')
-  X = 'xxx'
-  mov(rax, ptr(rip+'xxx'))
-  mov(rax, ptr(rip+X))
-  lea(rax, ptr(rip+'xxx'))
-  lea(rax, ptr(rip+X))
+  mov(rax, 'd0')
+  mov(rax, ptr('d0'))
+  lea(rax, ptr('d0'))
+  mov(rax, ptr(rip+'d0'))
+  lea(rax, ptr(rip+'d0'))
   L1 = Label()
   L2 = Label()
   L(L1)
@@ -95,7 +94,6 @@ def main():
   param = parser.parse_args()
 
   init(param)
-#  segment('data')
   segment('text')
 
   if param.run:

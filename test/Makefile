@@ -48,13 +48,38 @@ run_gas:
 run_masm:
 	@$(PYTHON) misc.py -run -m masm
 
+exec_gas.S: exec.py
+	$(PYTHON) exec.py -m gas > exec_gas.S
+
+exec_nasm.nasm: exec.py
+	$(PYTHON) exec.py -m nasm > exec_nasm.nasm
+
+exec_gas.exe: exec.o exec_gas.o
+	$(CXX) -o $@ $^
+
+exec_nasm.exe: exec.o exec_nasm.o
+	$(CXX) -o $@ $^
+
+exec_test: exec_gas.exe exec_nasm.exe
+	./exec_nasm.exe
+	./exec_gas.exe
+
+exec.cpp: exec.py
+	$(PYTHON) exec.py -cpp > exec.cpp
+
 SRC=mie_string_test.cpp
 
 MIE_STRING_DIR?=../../mie_string/
 CYBOZULIB_DIR?=../../cybozulib/
-CFLAGS=-O2 -DNDEBUG -mavx2 -I $(MIE_STRING_DIR) -I $(CYBOZULIB_DIR)/include
+CFLAGS=-g -O2 -DNDEBUG -mavx2 -I $(MIE_STRING_DIR) -I $(CYBOZULIB_DIR)/include
 
 VPATH=$(MIE_STRING_DIR)
+
+%.o: %.nasm
+	nasm $(NASM_OPT) $<
+
+%.o: %.S
+	$(CXX) -c $<
 
 %.o: %.cpp
 	$(PRE)$(CXX) $(CFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
