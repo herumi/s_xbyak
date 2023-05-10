@@ -4,3 +4,6 @@ test/b.txt
 test/c.txt
 *.obj
 *.lst
+*.o
+*.d
+CVS
