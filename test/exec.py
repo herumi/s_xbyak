@@ -31,6 +31,12 @@ def genFunc5():
       lea(rax, ptr(rip+'d5'))
       mov(rax, ptr(rax))
 
+def genFunc6():
+  with FuncProc('get_d6'):
+    with StackFrame(0):
+      lea(rax, ptr(rip+'d6'))
+      mov(rax, ptr(rax))
+
 def genCFuncs():
   print('''#include <cybozu/test.hpp>
 
@@ -40,6 +46,7 @@ int get_d2();
 int get_d3();
 int get_d4();
 int get_d5();
+int get_d6();
 extern int d5;
 }
 
@@ -52,6 +59,7 @@ CYBOZU_TEST_AUTO(test)
   CYBOZU_TEST_EQUAL(get_d5(), 55555);
   d5 = 9;
   CYBOZU_TEST_EQUAL(get_d5(), 9);
+  CYBOZU_TEST_EQUAL(get_d6(), 66666);
 }
 ''')
 
@@ -85,6 +93,9 @@ def main():
   global_('d5')
   dq_(55555)
 
+  makeLabel('d6')
+  dq_(66666)
+
   segment('text')
 
 #  genFunc1()
@@ -92,6 +103,7 @@ def main():
 #  genFunc3() # require /LARGEADDRESSAWARE:NO
 #  genFunc4() # seg on Linux, err on masm
   genFunc5()
+  genFunc6()
 
 
   term()
