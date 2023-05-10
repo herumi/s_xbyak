@@ -690,12 +690,14 @@ def dq_(s):
 def global_(s):
   if g_gas:
     output(f'.global PRE({s})')
-#    output(f'{s}:')
+    output(f'PRE({s}):')
   elif g_masm:
     output(f'public {s}')
     output(f'{s}:')
   elif g_nasm:
     output(f'_global {s}')
+    if not win64ABI:
+      output(f'{s}:')
 def extern_(s, size):
   if g_gas:
     output(f'.extern PRE({s})')
@@ -804,7 +806,6 @@ class FuncProc:
       return
     if g_gas:
       global_(name)
-      output(f'PRE({name}):')
       output(f'TYPE({self.name})')
       return
   def close(self):
