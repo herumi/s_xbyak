@@ -95,6 +95,7 @@ def main():
   param = parser.parse_args()
 
   init(param)
+#  segment('data')
   segment('text')
 
   if param.run:

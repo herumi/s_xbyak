@@ -646,7 +646,7 @@ def init(param):
 ''')
 
 def addPRE(s):
-  if g_gas:
+  if g_gas and isinstance(s, str):
     return f'PRE({s})'
   else:
     return s
@@ -654,17 +654,17 @@ def addPRE(s):
 def output(s):
   g_text.append(s)
 
-g_segment_code = False
+g_segment_data = False
 
 def segment(mode):
   if g_masm:
-    global g_segment_code
-    if mode == 'code':
-      g_segment_code = True
+    global g_segment_data
+    if mode == 'data':
+      g_segment_data = True
     if mode == 'text':
-      if g_segment_code:
+      if g_segment_data:
         output(f'_data ends')
-        g_segment_code = False
+        g_segment_data = False
   if g_gas:
     output(f'.{mode}')
   elif g_masm:
@@ -857,10 +857,14 @@ def getNameSuffix(bit):
 
 def genFunc(name):
   def f(*args):
-    # special case (mov label, reg)
-    if g_gas and name == 'mov' and isinstance(args[1], str):
-      output(f'movabs ${args[1]}, {args[0]}')
-      return
+    # special case (mov reg, label)
+    if name == 'mov' and (isinstance(args[1], str) or isinstance(args[1], Label)):
+      if g_gas:
+        output(f'movabs ${args[1]}, {adPRE(args[0])}')
+        return
+      if g_masm:
+        output(f'mov {argv[0]}, offset {argv[1]}')
+        return
     if not args:
       return output(name)
 
