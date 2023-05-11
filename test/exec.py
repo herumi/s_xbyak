@@ -55,7 +55,7 @@ CYBOZU_TEST_AUTO(test)
 //  CYBOZU_TEST_EQUAL(get_d1(), 11111);
 //  CYBOZU_TEST_EQUAL(get_d2(), 22222);
 //  CYBOZU_TEST_EQUAL(get_d3(), 33333);
-//  CYBOZU_TEST_EQUAL(get_d4(), 44444);
+  CYBOZU_TEST_EQUAL(get_d4(), 44444);
   CYBOZU_TEST_EQUAL(get_d5(), 55555);
   d5 = 9;
   CYBOZU_TEST_EQUAL(get_d5(), 9);
@@ -101,7 +101,7 @@ def main():
 #  genFunc1()
 #  genFunc2() # require /LARGEADDRESSAWARE:NO / -fPIE
 #  genFunc3() # require /LARGEADDRESSAWARE:NO
-#  genFunc4() # seg on Linux, err on masm
+  genFunc4()
   genFunc5()
   genFunc6()
 

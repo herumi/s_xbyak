@@ -56,6 +56,8 @@ T_RD =  (3<<1)
 T_RU =  (4<<1)
 T_RZ =  (5<<1)
 
+masmSizePrefixTbl = { 8 : 'b', 16 : '', 32 : 'd', 64 : 'q', 128 : 'xmm', 256 : 'ymm', 512 : 'zmm' }
+
 def mergeAttr(attr1, attr2):
   if (attr1>>1) and (attr2>>1):
     raise Exception("can't merge attr", attr1, attr2)
@@ -278,16 +280,15 @@ class Address:
         s = tbl[self.bit] + ' ' + s
       return s + self.getBroadcastStr() + maskStr
     # g_masm
-    tbl = { 32 : 'd', 64 : 'q', 128 : 'xmm', 256 : 'ymm', 512 : 'zmm' }
     if self.broadcast:
       # To distinguish vcvtpd2dq(xmm0, ptr_b(rax)) and vcvtpd2dq(xmm0, yword_b(rax)) on masm, but that doesn't seem to affect NASM (bug?).
       # https://developercommunity.visualstudio.com/t/ml64exe-cant-deal-with-vcvtpd2dq-xmm0/10352105
       if hasattr(self, 'bitForAddress'):
-        s = f'{tbl[self.bitForAddress]}word ptr ' + s
-      s = f'{tbl[self.bit]}word bcst ' + s
+        s = f'{masmSizePrefixTbl[self.bitForAddress]}word ptr ' + s
+      s = f'{masmSizePrefixTbl[self.bit]}word bcst ' + s
     else:
       if self.bit > 64:
-        s = f'{tbl[self.bit]}word ptr ' + s
+        s = f'{masmSizePrefixTbl[self.bit]}word ptr ' + s
     return s + maskStr
 
   def __or__(self, rhs):
@@ -861,16 +862,15 @@ def getNameSuffix(bit):
 def genFunc(name):
   def f(*args):
     # special case (mov reg, label)
-    if name == 'mov' and (isinstance(args[1], str) or isinstance(args[1], Label)):
-      if g_gas:
-        if isinstance(args[1], str):
-          s = f'{addPRE(args[1])}'
-        else:
-          s = str(args[1])
-        output(f'movabs {s}, {args[0]}')
+    if name == 'mov' and isinstance(args[0], Reg):
+      reg = args[0]
+      addr = args[1]
+      if g_gas and (isinstance(addr, str) or isinstance(addr, Label)):
+        output(f'movabs {addPRE(addr)}, {reg}')
         return
-      if g_masm:
-        output(f'mov {args[0]}, offset {args[1]}')
+      if g_masm and isinstance(addr, Address) and (isinstance(addr.exp, str) or isinstance(addr.exp, Label) or isinstance(addr.exp, RipReg)):
+        s = masmSizePrefixTbl[args[0].bit]
+        output(f'mov {args[0]}, {s}word ptr {addr}')
         return
     if not args:
       return output(name)
