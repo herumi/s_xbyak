@@ -53,6 +53,7 @@ T_YMM = 4
 T_ZMM = 5
 T_MASK = 6 # k1, k2, ...
 T_ATTR = 7
+T_MMX = 8
 
 # attr
 # one of (sae, rn, rd, ru, rz) or zero
@@ -85,6 +86,17 @@ class Operand:
     if hasattr(self, 'k'):
       r.k = self.k
     return r
+
+  def getTypeStr(self):
+    if self.kind == T_REG: return f'r{self.bit}'
+    if self.kind == T_FPU: return f'f{self.bit}'
+    if self.kind == T_MMX: return 'mm'
+    if self.kind == T_SSE: return 'xmm'
+    if self.kind == T_XMM: return 'xmm'
+    if self.kind == T_YMM: return 'ymm'
+    if self.kind == T_ZMM: return 'zmm'
+    if self.kind == T_MASK: return 'mask'
+    raise Exception('not supported type', self)
 
   def __str__(self):
     if self.kind == T_REG:
@@ -249,6 +261,8 @@ class Address:
     self.bit = bit
     self.broadcast = broadcast
     self.broadcastRate = 0
+  def getTypeStr(self):
+    return f'm{self.bit}'
   def copy(self):
     r = Address()
     r.exp = self.exp
@@ -321,6 +335,8 @@ class RipReg:
     else:
       self.label = v
       self.offset = 0
+  def getTypeStr(self):
+    return 'm0'
 
   def __str__(self):
     if self.label:
@@ -866,6 +882,49 @@ def getNameSuffix(bit):
     return 'z'
   return ''
 
+def getMemSizeIfMatch(argsType, t):
+  if len(argsType) != len(t):
+    return 0
+  memPos = -1
+  for i in range(len(argsType)):
+    if argsType[i][0] == 'm' and t[i][0] == 'm':
+      memPos = i
+    elif argsType[i] == t[i]:
+      continue
+    else:
+      return 0
+  if memPos == -1:
+    return 0
+  return int(t[memPos][1:])
+
+def detectMemSize(name, args):
+  if len(args) < 2:
+    return 0
+  argsType = []
+  for arg in args:
+    if isinstance(arg, int):
+      argsType.append('imm')
+    elif isinstance(arg, str) or isinstance(arg, Label):
+      argsType.append('m')
+    else:
+      argsType.append(arg.getTypeStr())
+
+#  print('argsType', argsType)
+
+  if argsType[0][0] == 'm':
+    tbl = MemRegTbl
+  else:
+    tbl = RegMemTbl
+  v = tbl.get(name, None)
+  if v == None:
+    return 0
+
+  for t in v:
+    s = getMemSizeIfMatch(argsType, t)
+    if s > 0:
+      return s
+  return 0
+
 def genFunc(name):
   def f(*args):
     # special case (mov reg, label)
@@ -882,16 +941,22 @@ def genFunc(name):
     if not args:
       return output(name)
 
-    # check max bit size of regs and attributes
+    # set memory size for masm
     bitSize = 0
+    if g_masm:
+      bitSize = detectMemSize(name, args)
+
+    # check max bit size of regs and attributes
     sae = 0
-    for arg in args:
-      if isinstance(arg, Operand):
-        bitSize = max(bitSize, arg.bit)
-        if arg.attr > 1:
-          sae = arg.attr
-      if isinstance(arg, Address):
-        bitSize = max(bitSize, arg.bit)
+    if bitSize == 0:
+      for arg in args:
+        if isinstance(arg, Operand):
+          bitSize = max(bitSize, arg.bit)
+          if arg.attr > 1:
+            sae = arg.attr
+        if isinstance(arg, Address):
+          bitSize = max(bitSize, arg.bit)
+
 
     # mnemonic requiring size for Address
     # bitForAddress is used to detect a suffix of a mnemonic in specialNameTbl for gas and masm
@@ -1467,3 +1532,513 @@ avx512broadcastTbl = {
   'vsubph' : T_B16,
 }
 
+#from tbl import RegMemTbl, MemRegTbl
+MemRegTbl={'extractps': {('m32', 'xmm', 'imm')},
+ 'movapd': {('m128', 'xmm')},
+ 'movaps': {('m128', 'xmm')},
+ 'movhpd': {('m64', 'xmm')},
+ 'movhps': {('m64', 'xmm')},
+ 'movlpd': {('m64', 'xmm')},
+ 'movlps': {('m64', 'xmm')},
+ 'movntdq': {('m128', 'xmm')},
+ 'movntpd': {('m128', 'xmm')},
+ 'movntps': {('m128', 'xmm')},
+ 'movq': {('m64', 'xmm')},
+ 'movsd': {('m64', 'xmm')},
+ 'movss': {('m32', 'xmm')},
+ 'movupd': {('m128', 'xmm')},
+ 'movups': {('m128', 'xmm')},
+ 'vcompresspd': {('m256', 'ymm'), ('m128', 'xmm'), ('m512', 'zmm')},
+ 'vcompressps': {('m256', 'ymm'), ('m128', 'xmm'), ('m512', 'zmm')},
+ 'vcvtps2ph': {('m128', 'ymm', 'imm'),
+               ('m256', 'zmm', 'imm'),
+               ('m64', 'xmm', 'imm')},
+ 'vextractps': {('m32', 'xmm', 'imm')},
+ 'vmovapd': {('m256', 'ymm'), ('m128', 'xmm'), ('m512', 'zmm')},
+ 'vmovaps': {('m256', 'ymm'), ('m128', 'xmm'), ('m512', 'zmm')},
+ 'vmovhpd': {('m64', 'xmm')},
+ 'vmovhps': {('m64', 'xmm')},
+ 'vmovlpd': {('m64', 'xmm')},
+ 'vmovlps': {('m64', 'xmm')},
+ 'vmovntdq': {('m256', 'ymm'), ('m128', 'xmm'), ('m512', 'zmm')},
+ 'vmovntpd': {('m256', 'ymm'), ('m128', 'xmm'), ('m512', 'zmm')},
+ 'vmovntps': {('m256', 'ymm'), ('m128', 'xmm'), ('m512', 'zmm')},
+ 'vmovq': {('m64', 'xmm')},
+ 'vmovsd': {('m64', 'xmm')},
+ 'vmovss': {('m32', 'xmm')},
+ 'vmovupd': {('m256', 'ymm'), ('m128', 'xmm'), ('m512', 'zmm')},
+ 'vmovups': {('m256', 'ymm'), ('m128', 'xmm'), ('m512', 'zmm')},
+ 'vpcompressd': {('m256', 'ymm'), ('m128', 'xmm'), ('m512', 'zmm')},
+ 'vpcompressq': {('m256', 'ymm'), ('m128', 'xmm'), ('m512', 'zmm')}}
+RegMemTbl={'addpd': {('xmm', 'm128')},
+ 'addps': {('xmm', 'm128')},
+ 'addsd': {('xmm', 'm64')},
+ 'addss': {('xmm', 'm32')},
+ 'addsubpd': {('xmm', 'm128')},
+ 'addsubps': {('xmm', 'm128')},
+ 'aesdec': {('xmm', 'm128')},
+ 'aesdec256kl': {('xmm', 'm512')},
+ 'aesdeclast': {('xmm', 'm128')},
+ 'aesenc': {('xmm', 'm128')},
+ 'aesenc256kl': {('xmm', 'm512')},
+ 'aesenclast': {('xmm', 'm128')},
+ 'aesimc': {('xmm', 'm128')},
+ 'aeskeygenassist': {('xmm', 'm128', 'imm')},
+ 'andnpd': {('xmm', 'm128')},
+ 'andnps': {('xmm', 'm128')},
+ 'andpd': {('xmm', 'm128')},
+ 'andps': {('xmm', 'm128')},
+ 'cmppd': {('xmm', 'm128', 'imm'), ('xmm', 'xmm', 'imm')},
+ 'cmpps': {('xmm', 'm128', 'imm'), ('xmm', 'xmm', 'imm')},
+ 'cmpsd': {('xmm', 'm64', 'imm'), ('xmm', 'xmm', 'imm')},
+ 'cmpss': {('xmm', 'xmm', 'imm'), ('xmm', 'm32', 'imm')},
+ 'comisd': {('xmm', 'm64')},
+ 'comiss': {('xmm', 'm32')},
+ 'cvtdq2pd': {('xmm', 'm64')},
+ 'cvtdq2ps': {('xmm', 'm128')},
+ 'cvtpd2dq': {('xmm', 'm128')},
+ 'cvtpd2ps': {('xmm', 'm128')},
+ 'cvtpi2pd': {('xmm', 'm64')},
+ 'cvtpi2ps': {('xmm', 'm64')},
+ 'cvtps2dq': {('xmm', 'm128')},
+ 'cvtps2pd': {('xmm', 'm64')},
+ 'cvtsd2ss': {('xmm', 'm64')},
+ 'cvtsi2sd': {('xmm', 'm32'), ('xmm', 'm64')},
+ 'cvtsi2ss': {('xmm', 'm32'), ('xmm', 'm64')},
+ 'cvtss2sd': {('xmm', 'm32')},
+ 'cvttpd2dq': {('xmm', 'm128')},
+ 'cvttps2dq': {('xmm', 'm128')},
+ 'divpd': {('xmm', 'm128')},
+ 'divps': {('xmm', 'm128')},
+ 'divsd': {('xmm', 'm64')},
+ 'divss': {('xmm', 'm32')},
+ 'gf2p8affineinvqb': {('xmm', 'm128', 'imm')},
+ 'gf2p8affineqb': {('xmm', 'm128', 'imm')},
+ 'gf2p8mulb': {('xmm', 'm128')},
+ 'haddpd': {('xmm', 'm128')},
+ 'haddps': {('xmm', 'm128')},
+ 'hsubpd': {('xmm', 'm128')},
+ 'hsubps': {('xmm', 'm128')},
+ 'insertps': {('xmm', 'm32', 'imm')},
+ 'maskmovdqu': {('xmm', 'xmm')},
+ 'maxpd': {('xmm', 'm128')},
+ 'maxps': {('xmm', 'm128')},
+ 'maxsd': {('xmm', 'm64')},
+ 'maxss': {('xmm', 'm32')},
+ 'minpd': {('xmm', 'm128')},
+ 'minps': {('xmm', 'm128')},
+ 'minsd': {('xmm', 'm64')},
+ 'minss': {('xmm', 'm32')},
+ 'movapd': {('xmm', 'm128')},
+ 'movaps': {('xmm', 'm128')},
+ 'movddup': {('xmm', 'm64')},
+ 'movhlps': {('xmm', 'xmm')},
+ 'movhpd': {('xmm', 'm64')},
+ 'movhps': {('xmm', 'm64')},
+ 'movlhps': {('xmm', 'xmm')},
+ 'movlpd': {('xmm', 'm64')},
+ 'movlps': {('xmm', 'm64')},
+ 'movntdqa': {('xmm', 'm128')},
+ 'movq': {('xmm', 'm64')},
+ 'movsd': {('xmm', 'xmm'), ('xmm', 'm64')},
+ 'movshdup': {('xmm', 'm128')},
+ 'movsldup': {('xmm', 'm128')},
+ 'movss': {('xmm', 'xmm'), ('xmm', 'm32')},
+ 'movupd': {('xmm', 'm128')},
+ 'movups': {('xmm', 'm128')},
+ 'mulpd': {('xmm', 'm128')},
+ 'mulps': {('xmm', 'm128')},
+ 'mulsd': {('xmm', 'm64')},
+ 'mulss': {('xmm', 'm32')},
+ 'orpd': {('xmm', 'm128')},
+ 'orps': {('xmm', 'm128')},
+ 'packusdw': {('xmm', 'm128')},
+ 'packuswb': {('xmm', 'm128')},
+ 'pand': {('xmm', 'm128')},
+ 'pandn': {('xmm', 'm128')},
+ 'pclmulqdq': {('xmm', 'm128', 'imm')},
+ 'pmaddwd': {('xmm', 'm128')},
+ 'pmuldq': {('xmm', 'm128')},
+ 'pmulhuw': {('xmm', 'm128')},
+ 'pmulhw': {('xmm', 'm128')},
+ 'pmullw': {('xmm', 'm128')},
+ 'pmuludq': {('xmm', 'm128')},
+ 'por': {('xmm', 'm128')},
+ 'psadbw': {('xmm', 'm128')},
+ 'pshufd': {('xmm', 'm128', 'imm')},
+ 'pshufhw': {('xmm', 'm128', 'imm')},
+ 'pshuflw': {('xmm', 'm128', 'imm')},
+ 'pslldq': {('xmm', 'imm')},
+ 'psrldq': {('xmm', 'imm')},
+ 'psubq': {('xmm', 'm128')},
+ 'ptest': {('xmm', 'm128')},
+ 'pxor': {('xmm', 'm128')},
+ 'rcpps': {('xmm', 'm128')},
+ 'rcpss': {('xmm', 'm32')},
+ 'rsqrtps': {('xmm', 'm128')},
+ 'rsqrtss': {('xmm', 'm32')},
+ 'sha1msg1': {('xmm', 'm128')},
+ 'sha1msg2': {('xmm', 'm128')},
+ 'sha1nexte': {('xmm', 'm128')},
+ 'sha1rnds4': {('xmm', 'm128', 'imm')},
+ 'sha256msg1': {('xmm', 'm128')},
+ 'sha256msg2': {('xmm', 'm128')},
+ 'sha256rnds2': {('xmm', 'm128', 'xmm')},
+ 'shufpd': {('xmm', 'm128', 'imm')},
+ 'shufps': {('xmm', 'm128', 'imm')},
+ 'sqrtpd': {('xmm', 'm128')},
+ 'sqrtps': {('xmm', 'm128')},
+ 'sqrtsd': {('xmm', 'm64')},
+ 'sqrtss': {('xmm', 'm32')},
+ 'subpd': {('xmm', 'm128')},
+ 'subps': {('xmm', 'm128')},
+ 'subsd': {('xmm', 'm64')},
+ 'subss': {('xmm', 'm32')},
+ 'ucomisd': {('xmm', 'm64')},
+ 'ucomiss': {('xmm', 'm32')},
+ 'unpckhpd': {('xmm', 'm128')},
+ 'unpckhps': {('xmm', 'm128')},
+ 'unpcklpd': {('xmm', 'm128')},
+ 'unpcklps': {('xmm', 'm128')},
+ 'vaddpd': {('xmm', 'xmm', 'm128'),
+            ('ymm', 'ymm', 'm256'),
+            ('zmm', 'zmm', 'm512')},
+ 'vaddps': {('xmm', 'xmm', 'm128'),
+            ('ymm', 'ymm', 'm256'),
+            ('zmm', 'zmm', 'm512')},
+ 'vaddsd': {('xmm', 'xmm', 'm64')},
+ 'vaddss': {('xmm', 'xmm', 'm32')},
+ 'vaddsubpd': {('xmm', 'xmm', 'm128'), ('ymm', 'ymm', 'm256')},
+ 'vaddsubps': {('xmm', 'xmm', 'm128'), ('ymm', 'ymm', 'm256')},
+ 'vaesdec': {('xmm', 'xmm', 'm128'),
+             ('ymm', 'ymm', 'm256'),
+             ('zmm', 'zmm', 'm512')},
+ 'vaesdeclast': {('xmm', 'xmm', 'm128'),
+                 ('ymm', 'ymm', 'm256'),
+                 ('zmm', 'zmm', 'm512')},
+ 'vaesenc': {('xmm', 'xmm', 'm128'),
+             ('ymm', 'ymm', 'm256'),
+             ('zmm', 'zmm', 'm512')},
+ 'vaesenclast': {('xmm', 'xmm', 'm128'),
+                 ('ymm', 'ymm', 'm256'),
+                 ('zmm', 'zmm', 'm512')},
+ 'vaesimc': {('xmm', 'm128')},
+ 'vaeskeygenassist': {('xmm', 'm128', 'imm')},
+ 'vandnpd': {('xmm', 'xmm', 'm128'),
+             ('ymm', 'ymm', 'm256'),
+             ('zmm', 'zmm', 'm512')},
+ 'vandnps': {('xmm', 'xmm', 'm128'),
+             ('ymm', 'ymm', 'm256'),
+             ('zmm', 'zmm', 'm512')},
+ 'vandpd': {('xmm', 'xmm', 'm128'),
+            ('ymm', 'ymm', 'm256'),
+            ('zmm', 'zmm', 'm512')},
+ 'vandps': {('xmm', 'xmm', 'm128'),
+            ('ymm', 'ymm', 'm256'),
+            ('zmm', 'zmm', 'm512')},
+ 'vcmppd': {('ymm', 'ymm', 'm256', 'imm'), ('xmm', 'xmm', 'm128', 'imm')},
+ 'vcmpps': {('ymm', 'ymm', 'm256', 'imm'), ('xmm', 'xmm', 'm128', 'imm')},
+ 'vcmpsd': {('xmm', 'xmm', 'm64', 'imm')},
+ 'vcmpss': {('xmm', 'xmm', 'm32', 'imm')},
+ 'vcomisd': {('xmm', 'm64')},
+ 'vcomiss': {('xmm', 'm32')},
+ 'vcvtdq2pd': {('ymm', 'm128'), ('zmm', 'm256'), ('xmm', 'm64')},
+ 'vcvtdq2ps': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vcvtne2ps2bf16': {('xmm', 'xmm', 'm128'),
+                    ('ymm', 'ymm', 'm256'),
+                    ('zmm', 'zmm', 'm512')},
+ 'vcvtneps2bf16': {('xmm', 'm256'), ('ymm', 'm512'), ('xmm', 'm128')},
+ 'vcvtpd2dq': {('xmm', 'm256'), ('ymm', 'm512'), ('xmm', 'm128')},
+ 'vcvtpd2ps': {('xmm', 'm256'), ('ymm', 'm512'), ('xmm', 'm128')},
+ 'vcvtpd2qq': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vcvtpd2udq': {('xmm', 'm256'), ('ymm', 'm512'), ('xmm', 'm128')},
+ 'vcvtpd2uqq': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vcvtph2ps': {('xmm', 'm64'),
+               ('xmm', 'm64', 'imm'),
+               ('ymm', 'm128'),
+               ('zmm', 'm256')},
+ 'vcvtps2dq': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vcvtps2pd': {('ymm', 'm128'), ('zmm', 'm256'), ('xmm', 'm64')},
+ 'vcvtps2qq': {('ymm', 'm128'), ('zmm', 'm256'), ('xmm', 'm64')},
+ 'vcvtps2udq': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vcvtps2uqq': {('ymm', 'm128'), ('zmm', 'm256'), ('xmm', 'm64')},
+ 'vcvtqq2pd': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vcvtqq2ps': {('xmm', 'm256'), ('ymm', 'm512'), ('xmm', 'm128')},
+ 'vcvtsd2ss': {('xmm', 'xmm', 'm64')},
+ 'vcvtsi2sd': {('xmm', 'xmm', 'm64'), ('xmm', 'xmm', 'm32')},
+ 'vcvtsi2ss': {('xmm', 'xmm', 'm64'), ('xmm', 'xmm', 'm32')},
+ 'vcvtss2sd': {('xmm', 'xmm', 'm32')},
+ 'vcvttpd2dq': {('xmm', 'm256'), ('ymm', 'm512'), ('xmm', 'm128')},
+ 'vcvttpd2qq': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vcvttpd2udq': {('xmm', 'm256'), ('ymm', 'm512'), ('xmm', 'm128')},
+ 'vcvttpd2uqq': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vcvttps2dq': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vcvttps2qq': {('ymm', 'm128'), ('zmm', 'm256'), ('xmm', 'm64')},
+ 'vcvttps2udq': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vcvttps2uqq': {('ymm', 'm128'), ('zmm', 'm256'), ('xmm', 'm64')},
+ 'vcvtudq2pd': {('ymm', 'm128'), ('zmm', 'm256'), ('xmm', 'm64')},
+ 'vcvtudq2ps': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vcvtuqq2pd': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vcvtuqq2ps': {('xmm', 'm256'), ('ymm', 'm512'), ('xmm', 'm128')},
+ 'vcvtusi2sd': {('xmm', 'xmm', 'm64'), ('xmm', 'xmm', 'm32')},
+ 'vcvtusi2ss': {('xmm', 'xmm', 'm64'), ('xmm', 'xmm', 'm32')},
+ 'vdbpsadbw': {('xmm', 'xmm', 'm128', 'imm'),
+               ('ymm', 'ymm', 'm256', 'imm'),
+               ('zmm', 'zmm', 'm512', 'imm')},
+ 'vdivpd': {('xmm', 'xmm', 'm128'),
+            ('ymm', 'ymm', 'm256'),
+            ('zmm', 'zmm', 'm512')},
+ 'vdivps': {('xmm', 'xmm', 'm128'),
+            ('ymm', 'ymm', 'm256'),
+            ('zmm', 'zmm', 'm512')},
+ 'vdivsd': {('xmm', 'xmm', 'm64')},
+ 'vdivss': {('xmm', 'xmm', 'm32')},
+ 'vdpbf16ps': {('xmm', 'xmm', 'm128'),
+               ('ymm', 'ymm', 'm256'),
+               ('zmm', 'zmm', 'm512')},
+ 'vexpandpd': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vexpandps': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vfixupimmpd': {('xmm', 'xmm', 'm128', 'imm'),
+                 ('ymm', 'ymm', 'm256', 'imm'),
+                 ('zmm', 'zmm', 'm512', 'imm')},
+ 'vfixupimmps': {('xmm', 'xmm', 'm128', 'imm'),
+                 ('ymm', 'ymm', 'm256', 'imm'),
+                 ('zmm', 'zmm', 'm512', 'imm')},
+ 'vfixupimmsd': {('xmm', 'xmm', 'm64', 'imm')},
+ 'vfixupimmss': {('xmm', 'xmm', 'm32', 'imm')},
+ 'vgetexppd': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vgetexpps': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vgetexpsd': {('xmm', 'xmm', 'm64')},
+ 'vgetexpss': {('xmm', 'xmm', 'm32')},
+ 'vgetmantpd': {('xmm', 'm128', 'imm'),
+                ('ymm', 'm256', 'imm'),
+                ('zmm', 'm512', 'imm')},
+ 'vgetmantps': {('xmm', 'm128', 'imm'),
+                ('ymm', 'm256', 'imm'),
+                ('zmm', 'm512', 'imm')},
+ 'vgetmantsd': {('xmm', 'xmm', 'm64', 'imm')},
+ 'vgetmantss': {('xmm', 'xmm', 'm32', 'imm')},
+ 'vgf2p8affineinvqb': {('xmm', 'xmm', 'm128', 'imm'),
+                       ('ymm', 'ymm', 'm256', 'imm'),
+                       ('zmm', 'zmm', 'm512', 'imm')},
+ 'vgf2p8affineqb': {('xmm', 'xmm', 'm128', 'imm'),
+                    ('ymm', 'ymm', 'm256', 'imm'),
+                    ('zmm', 'zmm', 'm512', 'imm')},
+ 'vgf2p8mulb': {('xmm', 'xmm', 'm128'),
+                ('ymm', 'ymm', 'm256'),
+                ('zmm', 'zmm', 'm512')},
+ 'vhaddpd': {('xmm', 'xmm', 'm128'), ('ymm', 'ymm', 'm256')},
+ 'vhaddps': {('xmm', 'xmm', 'm128'), ('ymm', 'ymm', 'm256')},
+ 'vhsubpd': {('xmm', 'xmm', 'm128'), ('ymm', 'ymm', 'm256')},
+ 'vhsubps': {('xmm', 'xmm', 'm128'), ('ymm', 'ymm', 'm256')},
+ 'vinsertps': {('xmm', 'xmm', 'm32', 'imm')},
+ 'vlddqu': {('ymm', 'm256'), ('xmm', 'm128')},
+ 'vmaskmovdqu': {('xmm', 'xmm')},
+ 'vmaxpd': {('xmm', 'xmm', 'm128'),
+            ('ymm', 'ymm', 'm256'),
+            ('zmm', 'zmm', 'm512')},
+ 'vmaxps': {('xmm', 'xmm', 'm128'),
+            ('ymm', 'ymm', 'm256'),
+            ('zmm', 'zmm', 'm512')},
+ 'vmaxsd': {('xmm', 'xmm', 'm64')},
+ 'vmaxss': {('xmm', 'xmm', 'm32')},
+ 'vminpd': {('xmm', 'xmm', 'm128'),
+            ('ymm', 'ymm', 'm256'),
+            ('zmm', 'zmm', 'm512')},
+ 'vminps': {('xmm', 'xmm', 'm128'),
+            ('ymm', 'ymm', 'm256'),
+            ('zmm', 'zmm', 'm512')},
+ 'vminsd': {('xmm', 'xmm', 'm64')},
+ 'vminss': {('xmm', 'xmm', 'm32')},
+ 'vmovapd': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vmovaps': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vmovddup': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm64')},
+ 'vmovhlps': {('xmm', 'xmm', 'xmm')},
+ 'vmovhpd': {('xmm', 'xmm', 'm64')},
+ 'vmovhps': {('xmm', 'xmm', 'm64')},
+ 'vmovlhps': {('xmm', 'xmm', 'xmm')},
+ 'vmovlpd': {('xmm', 'xmm', 'm64')},
+ 'vmovlps': {('xmm', 'xmm', 'm64')},
+ 'vmovntdqa': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vmovq': {('xmm', 'm64')},
+ 'vmovsd': {('xmm', 'xmm', 'xmm'), ('xmm', 'm64')},
+ 'vmovshdup': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vmovsldup': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vmovss': {('xmm', 'm32'), ('xmm', 'xmm', 'xmm')},
+ 'vmovupd': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vmovups': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vmulpd': {('xmm', 'xmm', 'm128'),
+            ('ymm', 'ymm', 'm256'),
+            ('zmm', 'zmm', 'm512')},
+ 'vmulps': {('xmm', 'xmm', 'm128'),
+            ('ymm', 'ymm', 'm256'),
+            ('zmm', 'zmm', 'm512')},
+ 'vmulsd': {('xmm', 'xmm', 'm64')},
+ 'vmulss': {('xmm', 'xmm', 'm32')},
+ 'vorpd': {('xmm', 'xmm', 'm128'),
+           ('ymm', 'ymm', 'm256'),
+           ('zmm', 'zmm', 'm512')},
+ 'vorps': {('xmm', 'xmm', 'm128'),
+           ('ymm', 'ymm', 'm256'),
+           ('zmm', 'zmm', 'm512')},
+ 'vpackusdw': {('xmm', 'xmm', 'm128'),
+               ('ymm', 'ymm', 'm256'),
+               ('zmm', 'zmm', 'm512')},
+ 'vpackuswb': {('xmm', 'xmm', 'm128'),
+               ('ymm', 'ymm', 'm256'),
+               ('zmm', 'zmm', 'm512')},
+ 'vpand': {('xmm', 'xmm', 'm128'), ('ymm', 'ymm', 'm256')},
+ 'vpandn': {('xmm', 'xmm', 'm128'), ('ymm', 'ymm', 'm256')},
+ 'vpermb': {('xmm', 'xmm', 'm128'),
+            ('ymm', 'ymm', 'm256'),
+            ('zmm', 'zmm', 'm512')},
+ 'vpermi2b': {('xmm', 'xmm', 'm128'),
+              ('ymm', 'ymm', 'm256'),
+              ('zmm', 'zmm', 'm512')},
+ 'vpermilpd': {('xmm', 'm128', 'imm'),
+               ('xmm', 'xmm', 'm128'),
+               ('ymm', 'm256', 'imm'),
+               ('ymm', 'ymm', 'm256'),
+               ('zmm', 'm512', 'imm'),
+               ('zmm', 'zmm', 'm512')},
+ 'vpermilps': {('xmm', 'm128', 'imm'),
+               ('xmm', 'xmm', 'm128'),
+               ('ymm', 'm256', 'imm'),
+               ('ymm', 'ymm', 'm256'),
+               ('zmm', 'zmm', 'm512')},
+ 'vpermpd': {('ymm', 'm256', 'imm'),
+             ('ymm', 'ymm', 'm256'),
+             ('zmm', 'm512', 'imm'),
+             ('zmm', 'zmm', 'm512')},
+ 'vpermps': {('zmm', 'zmm', 'm512'), ('ymm', 'ymm', 'm256')},
+ 'vpermq': {('ymm', 'm256', 'imm'),
+            ('ymm', 'ymm', 'm256'),
+            ('zmm', 'm512', 'imm'),
+            ('zmm', 'zmm', 'm512')},
+ 'vpermt2b': {('xmm', 'xmm', 'm128'),
+              ('ymm', 'ymm', 'm256'),
+              ('zmm', 'zmm', 'm512')},
+ 'vpexpandd': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vpexpandq': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vpmadd52huq': {('xmm', 'xmm', 'm128'),
+                 ('ymm', 'ymm', 'm256'),
+                 ('zmm', 'zmm', 'm512')},
+ 'vpmadd52luq': {('xmm', 'xmm', 'm128'),
+                 ('ymm', 'ymm', 'm256'),
+                 ('zmm', 'zmm', 'm512')},
+ 'vpmaddwd': {('xmm', 'xmm', 'm128'), ('ymm', 'ymm', 'm256')},
+ 'vpmuldq': {('xmm', 'xmm', 'm128'),
+             ('ymm', 'ymm', 'm256'),
+             ('zmm', 'zmm', 'm512')},
+ 'vpmulhuw': {('xmm', 'xmm', 'm128'), ('ymm', 'ymm', 'm256')},
+ 'vpmulhw': {('xmm', 'xmm', 'm128'), ('ymm', 'ymm', 'm256')},
+ 'vpmullw': {('xmm', 'xmm', 'm128'), ('ymm', 'ymm', 'm256')},
+ 'vpmuludq': {('xmm', 'xmm', 'm128'),
+              ('ymm', 'ymm', 'm256'),
+              ('zmm', 'zmm', 'm512')},
+ 'vpor': {('xmm', 'xmm', 'm128'), ('ymm', 'ymm', 'm256')},
+ 'vpsadbw': {('xmm', 'xmm', 'm128'),
+             ('ymm', 'ymm', 'm256'),
+             ('zmm', 'zmm', 'm512')},
+ 'vpshufd': {('xmm', 'm128', 'imm'),
+             ('ymm', 'm256', 'imm'),
+             ('zmm', 'm512', 'imm')},
+ 'vpshufhw': {('xmm', 'm128', 'imm'), ('ymm', 'm256', 'imm')},
+ 'vpshuflw': {('xmm', 'm128', 'imm'), ('ymm', 'm256', 'imm')},
+ 'vpslldq': {('xmm', 'm128', 'imm'),
+             ('xmm', 'xmm', 'imm'),
+             ('ymm', 'm256', 'imm'),
+             ('ymm', 'ymm', 'imm'),
+             ('zmm', 'm512', 'imm')},
+ 'vpsrldq': {('xmm', 'm128', 'imm'),
+             ('xmm', 'xmm', 'imm'),
+             ('ymm', 'm256', 'imm'),
+             ('ymm', 'ymm', 'imm'),
+             ('zmm', 'm512', 'imm')},
+ 'vpsubq': {('xmm', 'xmm', 'm128'), ('ymm', 'ymm', 'm256')},
+ 'vptest': {('ymm', 'm256'), ('xmm', 'm128')},
+ 'vpxor': {('xmm', 'xmm', 'm128'), ('ymm', 'ymm', 'm256')},
+ 'vrangepd': {('xmm', 'xmm', 'm128', 'imm'),
+              ('ymm', 'ymm', 'm256', 'imm'),
+              ('zmm', 'zmm', 'm512', 'imm')},
+ 'vrangeps': {('xmm', 'xmm', 'm128', 'imm'),
+              ('ymm', 'ymm', 'm256', 'imm'),
+              ('zmm', 'zmm', 'm512', 'imm')},
+ 'vrangesd': {('xmm', 'xmm', 'm64', 'imm')},
+ 'vrangess': {('xmm', 'xmm', 'm32', 'imm')},
+ 'vrcp14pd': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vrcp14ps': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vrcp14sd': {('xmm', 'xmm', 'm64')},
+ 'vrcp14ss': {('xmm', 'xmm', 'm32')},
+ 'vrcpps': {('ymm', 'm256'), ('xmm', 'm128')},
+ 'vrcpss': {('xmm', 'xmm', 'm32')},
+ 'vreducepd': {('xmm', 'm128', 'imm'),
+               ('ymm', 'm256', 'imm'),
+               ('zmm', 'm512', 'imm')},
+ 'vreduceps': {('xmm', 'm128', 'imm'),
+               ('ymm', 'm256', 'imm'),
+               ('zmm', 'm512', 'imm')},
+ 'vreducesd': {('xmm', 'xmm', 'm64', 'imm')},
+ 'vreducess': {('xmm', 'xmm', 'm32', 'imm')},
+ 'vrndscalepd': {('xmm', 'm128', 'imm'),
+                 ('ymm', 'm256', 'imm'),
+                 ('zmm', 'm512', 'imm')},
+ 'vrndscaleps': {('xmm', 'm128', 'imm'),
+                 ('ymm', 'm256', 'imm'),
+                 ('zmm', 'm512', 'imm')},
+ 'vrndscalesd': {('xmm', 'xmm', 'm64', 'imm')},
+ 'vrndscaless': {('xmm', 'xmm', 'm32', 'imm')},
+ 'vrsqrt14pd': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vrsqrt14ps': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vrsqrt14sd': {('xmm', 'xmm', 'm64')},
+ 'vrsqrt14ss': {('xmm', 'xmm', 'm32')},
+ 'vrsqrtps': {('ymm', 'm256'), ('xmm', 'm128')},
+ 'vrsqrtss': {('xmm', 'xmm', 'm32')},
+ 'vscalefpd': {('xmm', 'xmm', 'm128'),
+               ('ymm', 'ymm', 'm256'),
+               ('zmm', 'zmm', 'm512')},
+ 'vscalefps': {('xmm', 'xmm', 'm128'),
+               ('ymm', 'ymm', 'm256'),
+               ('zmm', 'zmm', 'm512')},
+ 'vscalefsd': {('xmm', 'xmm', 'm64')},
+ 'vscalefss': {('xmm', 'xmm', 'm32')},
+ 'vshufpd': {('xmm', 'xmm', 'm128', 'imm'),
+             ('ymm', 'ymm', 'm256', 'imm'),
+             ('zmm', 'zmm', 'm512', 'imm')},
+ 'vshufps': {('xmm', 'xmm', 'm128', 'imm'),
+             ('ymm', 'ymm', 'm256', 'imm'),
+             ('zmm', 'zmm', 'm512', 'imm')},
+ 'vsqrtpd': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vsqrtps': {('zmm', 'm512'), ('ymm', 'm256'), ('xmm', 'm128')},
+ 'vsqrtsd': {('xmm', 'xmm', 'm64')},
+ 'vsqrtss': {('xmm', 'xmm', 'm32')},
+ 'vsubpd': {('xmm', 'xmm', 'm128'),
+            ('ymm', 'ymm', 'm256'),
+            ('zmm', 'zmm', 'm512')},
+ 'vsubps': {('xmm', 'xmm', 'm128'),
+            ('ymm', 'ymm', 'm256'),
+            ('zmm', 'zmm', 'm512')},
+ 'vsubsd': {('xmm', 'xmm', 'm64')},
+ 'vsubss': {('xmm', 'xmm', 'm32')},
+ 'vucomisd': {('xmm', 'm64')},
+ 'vucomiss': {('xmm', 'm32')},
+ 'vunpckhpd': {('xmm', 'xmm', 'm128'),
+               ('ymm', 'ymm', 'm256'),
+               ('zmm', 'zmm', 'm512')},
+ 'vunpckhps': {('xmm', 'xmm', 'm128'),
+               ('ymm', 'ymm', 'm256'),
+               ('zmm', 'zmm', 'm512')},
+ 'vunpcklpd': {('xmm', 'xmm', 'm128'),
+               ('ymm', 'ymm', 'm256'),
+               ('zmm', 'zmm', 'm512')},
+ 'vunpcklps': {('xmm', 'xmm', 'm128'),
+               ('ymm', 'ymm', 'm256'),
+               ('zmm', 'zmm', 'm512')},
+ 'vxorpd': {('xmm', 'xmm', 'm128'),
+            ('ymm', 'ymm', 'm256'),
+            ('zmm', 'zmm', 'm512')},
+ 'vxorps': {('xmm', 'xmm', 'm128'),
+            ('ymm', 'ymm', 'm256'),
+            ('zmm', 'zmm', 'm512')},
+ 'xorpd': {('xmm', 'm128')},
+ 'xorps': {('xmm', 'm128')}}

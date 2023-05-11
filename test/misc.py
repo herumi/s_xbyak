@@ -67,20 +67,14 @@ def miscTest():
   L(L2)
 
 def runTest():
-  mov(rax, 'd0')
-  mov(rax, ptr('d0'))
-  lea(rax, ptr('d0'))
-  mov(rax, ptr(rip+'d0'))
-  lea(rax, ptr(rip+'d0'))
+  vcvtpd2dq(xmm19, yword_b (eax+32))
+  vmovdqu(xmm1, ptr(r8))
   L1 = Label()
   L2 = Label()
   L(L1)
   vaddps(zmm0, zmm1, ptr(rip+L1+128))
-  vaddps(zmm0, zmm1, ptr(L1))
-  vaddps(zmm0, zmm1, ptr(rip+L2+256))
-  vaddps(zmm0, zmm1, ptr_b(rip+L1+128))
-  vaddps(zmm0, zmm1, ptr_b(L1))
-  vaddps(zmm0, zmm1, ptr_b(rip+L2+256))
+  vaddps(xmm0, xmm1, ptr(rip+L1+128))
+  vextractps(ptr(rax), xmm1, 3)
   L(L2)
 
 
