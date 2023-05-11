@@ -98,9 +98,9 @@ def main():
 
   segment('text')
 
-#  genFunc1()
-#  genFunc2() # require /LARGEADDRESSAWARE:NO / -fPIE
-#  genFunc3() # require /LARGEADDRESSAWARE:NO
+#  genFunc1() # err on mac, masm ok on linux, gas err on linux, nasm/masm ok on win
+#  genFunc2() # err on mac/linux, require /LARGEADDRESSAWARE:NO
+#  genFunc3() # err on mac/linux, require /LARGEADDRESSAWARE:NO
   genFunc4()
   genFunc5()
   genFunc6()
