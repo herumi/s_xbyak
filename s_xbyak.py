@@ -5,6 +5,13 @@
 # License : modified new BSD license (http://opensource.org/licenses/BSD-3-Clause)
 import struct
 import re
+import argparse
+
+def getDefaultParser(description='s_xbyak'):
+  parser = argparse.ArgumentParser(description=description)
+  parser.add_argument('-win', '--win', help='Win64 ABI(default:Amd64 ABI)', action='store_true')
+  parser.add_argument('-m', '--mode', help='asm mode(nasm|masm|gas)', default='nasm')
+  return parser
 
 RE_HEX_STR=r'\b0x([0-9a-f]+)\b'
 
@@ -287,7 +294,7 @@ class Address:
         s = f'{masmSizePrefixTbl[self.bitForAddress]}word ptr ' + s
       s = f'{masmSizePrefixTbl[self.bit]}word bcst ' + s
     else:
-      if self.bit > 64:
+      if self.bit > 0:
         s = f'{masmSizePrefixTbl[self.bit]}word ptr ' + s
     return s + maskStr
 
@@ -895,14 +902,14 @@ def genFunc(name):
     for arg in args:
       if isinstance(arg, Address):
         if arg.broadcast:
-          if g_masm and arg.bit > 128:
+          if g_masm and arg.bit > 64:
             arg.bitForAddress = arg.bit
           arg.setBroadcastRage(name, bitSize)
         elif name in specialNameTbl:
           if arg.bit == 0:
             arg.bit = 128 # default size
           bitForAddress = arg.bit
-        if g_masm and arg.bit == 0:
+        if g_masm and arg.bit == 0 and bitSize > 64:
           arg.bit = bitSize
 
     param = list(args)
@@ -1460,9 +1467,3 @@ avx512broadcastTbl = {
   'vsubph' : T_B16,
 }
 
-import argparse
-def getDefaultParser(description='s_xbyak'):
-  parser = argparse.ArgumentParser(description=description)
-  parser.add_argument('-win', '--win', help='Win64 ABI(default:Amd64 ABI)', action='store_true')
-  parser.add_argument('-m', '--mode', help='asm mode(nasm|masm|gas)', default='nasm')
-  return parser
