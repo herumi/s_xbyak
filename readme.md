@@ -57,7 +57,7 @@ Commentaries:
   - Declare that the function `add2` starts here.
 - `StackFrame(2)`
   - Declare that the function has two integer-type arguments
-  - Remark : The current version supports only integer-(pointer)-type
+  - Remark : The current version supports only integer-(pointer)-type and the max number is four.
   - `sf.p[0]` : The register corresponding to the 1st argument.
   - `sf.p[1]` : The register corresponding to the 2nd argument.
 - `lea(rax, ptr(x + y))`
