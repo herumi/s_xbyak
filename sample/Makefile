@@ -1,6 +1,6 @@
 PYTHON?=python3
 
-SRC=add.cpp
+SRC=add.cpp mem.cpp
 TARGET=$(SRC:.cpp=.exe)
 
 CFLAGS=-DNDEBUG -O2
