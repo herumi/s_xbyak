@@ -17,7 +17,7 @@ i.e., A static version of Xbyak
 
 There are several samples in the `sample/` directory.
 
-## An add function
+## Sample of Adding Function
 [sample/add.py](sample/add.py)
 ```python
 import sys
@@ -126,6 +126,40 @@ add2 endp
 _text ends
 end
 ```
+## Sample of Memory Aaccess
+[sample/mem.py](sample/mem.py)
+```python
+def main():
+  parser = getDefaultParser()
+  param = parser.parse_args()
+
+  init(param)
+  segment('data')
+  global_('g_x')
+  dd_(123)
+  segment('text')
+
+  with FuncProc('inc_and_add'):
+    with StackFrame(1) as sf:
+      inc(dword(rip+'g_x'))
+      y = sf.p[0]
+      mov(eax, ptr(rip+'g_x'))
+      add(rax, y)
+
+  term()
+```
+
+Commentaries:
+- `segment('data')`
+  - Declare that the data starts here.
+- `global_('g_x')`
+  - The memory named `g_x` can be accessed from the other files.
+- `dd_(123)`
+  - Put `123` as 64-bit integer.
+- `(rip+'g_x')`
+  - Use `rip+` to access by relative addressing.
+- `inc(dword(...))`
+  - Use `qword(64-bit)/dword(32-bit)/word(16-bit)/byte(8-bit)` instead of `ptr` to specify the memory size.
 
 # Mnemonics
 
