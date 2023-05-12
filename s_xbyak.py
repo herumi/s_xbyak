@@ -15,7 +15,7 @@ def getDefaultParser(description='s_xbyak'):
 
 RE_HEX_STR=r'\b0x([0-9a-f]+)\b'
 
-VERSION="0.1.0"
+VERSION="0.9.0"
 
 RAX = 0
 RCX = 1
