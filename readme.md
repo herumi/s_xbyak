@@ -31,7 +31,7 @@ def main():
   init(param)
   segment('text')
 
-  with FuncProc('add'):
+  with FuncProc('add2'):
     with StackFrame(2) as sf:
       x = sf.p[0]
       y = sf.p[1]
@@ -53,8 +53,8 @@ Commentaries:
 
 - `segment('text')`
   - Declare that the code starts here.
-- `FuncProc('add')`
-  - Declare that the function `add` starts here.
+- `FuncProc('add2')`
+  - Declare that the function `add2` starts here.
 - `StackFrame(2)`
   - Declare that the function has two integer-type arguments
   - Remark : The current version supports only integer-(pointer)-type
@@ -74,12 +74,12 @@ python3 add.py -m gas > add_s.S
 
 ```gas
 .text
-.global PRE(add)
-PRE(add):
-TYPE(add)
+.global PRE(add2)
+PRE(add2):
+TYPE(add2)
 lea (%rdi,%rsi,1), %rax
 ret
-SIZE(add)
+SIZE(add2)
 ```
 
 - `PRE`, `TYPE`, `SIZE` are macros to absorb OS differences.
@@ -93,7 +93,7 @@ python3 add.py -m nasm
 
 ```nasm
 segment .text
-_global add
+_global add2
 lea rax, [rdi+rsi]
 ret
 ```
@@ -105,8 +105,8 @@ python3 add.py -m nasm -win
 
 ```nasm
 segment .text
-export add
-_global add
+export add2
+_global add2
 lea rax, [rcx+rdx]
 ret
 ```
@@ -119,10 +119,10 @@ python3 add.py -m masm
 
 ```nasm
 _text segment
-add proc export
+add2 proc export
 lea rax, [rcx+rdx]
 ret
-add endp
+add2 endp
 _text ends
 end
 ```
