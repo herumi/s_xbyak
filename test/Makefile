@@ -11,6 +11,7 @@ DIFF_OPT=-urN
 test:
 	make test1 FILE=gen_ff_x64
 	make test1 FILE=gen_bint_x64
+	make test1 FILE=gen_fmath
 	make test1 FILE=string
 	make test1 FILE=misc
 #	$(PYTHON) misc.py

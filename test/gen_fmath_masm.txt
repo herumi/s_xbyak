@@ -1,0 +1,154 @@
+; for masm (ml64.exe)
+_data segment
+log2_e:
+dd 1069066811
+exp_coef:
+dd 1065353216
+dd 1060205080
+dd 1047919883
+dd 1029920650
+dd 1008624482
+dd 984584985
+_data ends
+_text segment
+align 16
+fmath_exp_v_avx512 proc export
+sub rsp, 904
+vmovups zmmword ptr [rsp], zmm5
+vmovups zmmword ptr [rsp+64], zmm6
+vmovups zmmword ptr [rsp+128], zmm7
+vmovups zmmword ptr [rsp+192], zmm8
+vmovups zmmword ptr [rsp+256], zmm9
+vmovups zmmword ptr [rsp+320], zmm10
+vmovups zmmword ptr [rsp+384], zmm11
+vmovups zmmword ptr [rsp+448], zmm12
+vmovups zmmword ptr [rsp+512], zmm13
+vmovups zmmword ptr [rsp+576], zmm14
+vmovups zmmword ptr [rsp+640], zmm15
+vmovups zmmword ptr [rsp+704], zmm16
+vmovups zmmword ptr [rsp+768], zmm17
+vmovups zmmword ptr [rsp+832], zmm18
+mov r10, rcx
+vbroadcastss zmm18, dword ptr log2_e
+vbroadcastss zmm12, dword ptr exp_coef
+vbroadcastss zmm13, dword ptr exp_coef+4
+vbroadcastss zmm14, dword ptr exp_coef+8
+vbroadcastss zmm15, dword ptr exp_coef+12
+vbroadcastss zmm16, dword ptr exp_coef+16
+vbroadcastss zmm17, dword ptr exp_coef+20
+mov rcx, r8
+jmp @L2
+@L1:
+vmovups zmm0, zmmword ptr [rdx]
+vmovups zmm1, zmmword ptr [rdx+64]
+vmovups zmm2, zmmword ptr [rdx+128]
+vmovups zmm3, zmmword ptr [rdx+192]
+add rdx, 256
+vmulps zmm0, zmm0, zmm18
+vmulps zmm1, zmm1, zmm18
+vmulps zmm2, zmm2, zmm18
+vmulps zmm3, zmm3, zmm18
+vrndscaleps zmm4, zmm0, 0
+vrndscaleps zmm5, zmm1, 0
+vrndscaleps zmm6, zmm2, 0
+vrndscaleps zmm7, zmm3, 0
+vsubps zmm0, zmm0, zmm4
+vsubps zmm1, zmm1, zmm5
+vsubps zmm2, zmm2, zmm6
+vsubps zmm3, zmm3, zmm7
+vmovaps zmm8, zmm17
+vmovaps zmm9, zmm17
+vmovaps zmm10, zmm17
+vmovaps zmm11, zmm17
+vfmadd213ps zmm8, zmm0, zmm16
+vfmadd213ps zmm9, zmm1, zmm16
+vfmadd213ps zmm10, zmm2, zmm16
+vfmadd213ps zmm11, zmm3, zmm16
+vfmadd213ps zmm8, zmm0, zmm15
+vfmadd213ps zmm9, zmm1, zmm15
+vfmadd213ps zmm10, zmm2, zmm15
+vfmadd213ps zmm11, zmm3, zmm15
+vfmadd213ps zmm8, zmm0, zmm14
+vfmadd213ps zmm9, zmm1, zmm14
+vfmadd213ps zmm10, zmm2, zmm14
+vfmadd213ps zmm11, zmm3, zmm14
+vfmadd213ps zmm8, zmm0, zmm13
+vfmadd213ps zmm9, zmm1, zmm13
+vfmadd213ps zmm10, zmm2, zmm13
+vfmadd213ps zmm11, zmm3, zmm13
+vfmadd213ps zmm8, zmm0, zmm12
+vfmadd213ps zmm9, zmm1, zmm12
+vfmadd213ps zmm10, zmm2, zmm12
+vfmadd213ps zmm11, zmm3, zmm12
+vscalefps zmm0, zmm8, zmm4
+vscalefps zmm1, zmm9, zmm5
+vscalefps zmm2, zmm10, zmm6
+vscalefps zmm3, zmm11, zmm7
+vmovups zmmword ptr [r10], zmm0
+vmovups zmmword ptr [r10+64], zmm1
+vmovups zmmword ptr [r10+128], zmm2
+vmovups zmmword ptr [r10+192], zmm3
+add r10, 256
+sub r8, 64
+@L2:
+cmp r8, 64
+jae @L1
+jmp @L4
+@L3:
+vmovups zmm0, zmmword ptr [rdx]
+add rdx, 64
+vmulps zmm0, zmm0, zmm18
+vrndscaleps zmm1, zmm0, 0
+vsubps zmm0, zmm0, zmm1
+vmovaps zmm2, zmm17
+vfmadd213ps zmm2, zmm0, zmm16
+vfmadd213ps zmm2, zmm0, zmm15
+vfmadd213ps zmm2, zmm0, zmm14
+vfmadd213ps zmm2, zmm0, zmm13
+vfmadd213ps zmm2, zmm0, zmm12
+vscalefps zmm0, zmm2, zmm1
+vmovups zmmword ptr [r10], zmm0
+add r10, 64
+sub r8, 16
+@L4:
+cmp r8, 16
+jae @L3
+@L5:
+and ecx, 15
+jz @L6
+mov eax, 1
+shl eax, cl
+sub eax, 1
+kmovd k1, eax
+vmovups zmm0{k1}{z}, zmmword ptr [rdx]
+vmulps zmm0, zmm0, zmm18
+vrndscaleps zmm1, zmm0, 0
+vsubps zmm0, zmm0, zmm1
+vmovaps zmm2, zmm17
+vfmadd213ps zmm2, zmm0, zmm16
+vfmadd213ps zmm2, zmm0, zmm15
+vfmadd213ps zmm2, zmm0, zmm14
+vfmadd213ps zmm2, zmm0, zmm13
+vfmadd213ps zmm2, zmm0, zmm12
+vscalefps zmm0, zmm2, zmm1
+vmovups zmmword ptr [r10]{k1}, zmm0
+@L6:
+vmovups zmm5, zmmword ptr [rsp]
+vmovups zmm6, zmmword ptr [rsp+64]
+vmovups zmm7, zmmword ptr [rsp+128]
+vmovups zmm8, zmmword ptr [rsp+192]
+vmovups zmm9, zmmword ptr [rsp+256]
+vmovups zmm10, zmmword ptr [rsp+320]
+vmovups zmm11, zmmword ptr [rsp+384]
+vmovups zmm12, zmmword ptr [rsp+448]
+vmovups zmm13, zmmword ptr [rsp+512]
+vmovups zmm14, zmmword ptr [rsp+576]
+vmovups zmm15, zmmword ptr [rsp+640]
+vmovups zmm16, zmmword ptr [rsp+704]
+vmovups zmm17, zmmword ptr [rsp+768]
+vmovups zmm18, zmmword ptr [rsp+832]
+add rsp, 904
+ret
+fmath_exp_v_avx512 endp
+_text ends
+end

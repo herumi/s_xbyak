@@ -1,4 +1,6 @@
 @echo off
+set FILE=gen_fmath
+call :test1
 set FILE=string
 call :test1
 set FILE=gen_ff_x64
