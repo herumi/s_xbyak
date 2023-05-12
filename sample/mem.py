@@ -12,8 +12,9 @@ def main():
   dd_(123)
   segment('text')
 
-  with FuncProc('add_x'):
+  with FuncProc('inc_and_add'):
     with StackFrame(1) as sf:
+      inc(dword(rip+'g_x'))
       y = sf.p[0]
       mov(eax, ptr(rip+'g_x'))
       add(rax, y)

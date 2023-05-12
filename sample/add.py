@@ -9,7 +9,7 @@ def main():
   init(param)
   segment('text')
 
-  with FuncProc('add'):
+  with FuncProc('add2'):
     with StackFrame(2) as sf:
       x = sf.p[0]
       y = sf.p[1]
