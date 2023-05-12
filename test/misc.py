@@ -26,6 +26,7 @@ def maskTest():
   assertEq(str(xmm1|k2|T_z), 'xmm1{k2}{z}')
 
 def miscTest():
+  vbroadcastss(zmm1, ptr(rax))
   vaddpd(zmm2, zmm5, zmm30)
   vaddpd(xmm30, xmm20, ptr(rax))
   vaddps(xmm30, xmm20, ptr(rax))
@@ -67,6 +68,8 @@ def miscTest():
   L(L2)
 
 def runTest():
+  vbroadcastss(zmm1, ptr(rax))
+  return
   vcvtpd2dq(xmm19, yword_b (eax+32))
   vmovdqu(xmm1, ptr(r8))
   L1 = Label()

@@ -922,12 +922,13 @@ def detectMemSize(name, args):
     return 0
 
   # search minimum matched size
-  minS = 1000
+  NOT_FOUND = 1000
+  minS = NOT_FOUND
   for t in v:
     s = getMemSizeIfMatch(argsType, t)
     if s > 0:
       minS = min(minS, s)
-  else:
+  if minS == NOT_FOUND:
     return 0
   return minS
 
@@ -963,7 +964,6 @@ def genFunc(name):
         if isinstance(arg, Address):
           bitSize = max(bitSize, arg.bit)
 
-
     # mnemonic requiring size for Address
     # bitForAddress is used to detect a suffix of a mnemonic in specialNameTbl for gas and masm
     bitForAddress = 0
@@ -980,7 +980,7 @@ def genFunc(name):
           if arg.bit == 0:
             arg.bit = 128 # default size
           bitForAddress = arg.bit
-        if g_masm and arg.bit == 0 and bitSize > 64:
+        if g_masm and arg.bit == 0 and bitSize > 0:
           arg.bit = bitSize
 
     param = list(args)

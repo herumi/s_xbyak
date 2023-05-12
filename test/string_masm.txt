@@ -67,7 +67,7 @@ and rcx, -16
 vmovdqa xmm0, xmmword ptr [rcx]
 mov rcx, r10
 and ecx, 15
-lea r11, shiftPtn
+lea r11, qword ptr shiftPtn
 vmovdqu xmm2, xmmword ptr [r11+rcx]
 vpshufb xmm0, xmm0, xmm2
 jmp @L4
@@ -78,7 +78,7 @@ vpcmpestri xmm1, xmm0, 0
 @L5:
 jnc @L7
 @L6:
-lea rax, [r10+rcx]
+lea rax, qword ptr [r10+rcx]
 ret
 @L7:
 xor eax, eax
@@ -116,7 +116,7 @@ and rcx, -16
 vmovdqa xmm0, xmmword ptr [rcx]
 mov rcx, r10
 and ecx, 15
-lea r11, shiftPtn
+lea r11, qword ptr shiftPtn
 vmovdqu xmm2, xmmword ptr [r11+rcx]
 vpshufb xmm0, xmm0, xmm2
 jmp @L11
@@ -127,7 +127,7 @@ vpcmpestri xmm1, xmm0, 4
 @L12:
 jnc @L14
 @L13:
-lea rax, [r10+rcx]
+lea rax, qword ptr [r10+rcx]
 ret
 @L14:
 xor eax, eax

@@ -11,6 +11,7 @@
 %endmacro
 
 segment .text
+vbroadcastss zmm1, [rax]
 vaddpd zmm2, zmm5, zmm30
 vaddpd xmm30, xmm20, [rax]
 vaddps xmm30, xmm20, [rax]

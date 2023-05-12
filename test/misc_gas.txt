@@ -13,6 +13,7 @@
   #define SIZE(x)
 #endif
 .text
+vbroadcastss (%rax), %zmm1
 vaddpd %zmm30, %zmm5, %zmm2
 vaddpd (%rax), %xmm20, %xmm30
 vaddps (%rax), %xmm20, %xmm30

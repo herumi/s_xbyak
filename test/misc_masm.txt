@@ -1,5 +1,6 @@
 ; for masm (ml64.exe)
 _text segment
+vbroadcastss zmm1, dword ptr [rax]
 vaddpd zmm2, zmm5, zmm30
 vaddpd xmm30, xmm20, xmmword ptr [rax]
 vaddps xmm30, xmm20, xmmword ptr [rax]

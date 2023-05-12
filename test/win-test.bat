@@ -1,4 +1,6 @@
 @echo off
+set FILE=string
+call :test1
 set FILE=gen_ff_x64
 call :test1
 set FILE=gen_bint_x64
