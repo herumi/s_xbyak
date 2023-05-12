@@ -1,4 +1,19 @@
+UNAME_S=$(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+ NASM_OPT=-f macho64 -DADD_UNDERSCORE
+else
+ NASM_OPT=-f elf64
+endif
 PYTHON?=python3
+DIFF_OPT=-urN
+#DIFF_OPT=-urNw # ignore all blank
+
+%_nasm.o: %_nasm.nasm
+	nasm $(NASM_OPT) $<
+
+%_gas.o: %_gas.S
+	$(CXX) -c $<
+
 
 SRC=add.cpp mem.cpp
 TARGET=$(SRC:.cpp=.exe)
@@ -7,35 +22,36 @@ CFLAGS=-DNDEBUG -O2
 
 NASM?=0
 
+ifeq ($(NASM),1)
+  MODE=nasm
+  SUF=nasm
+else
+  MODE=gas
+  SUF=S
+endif
+
 test: $(TARGET)
 	@sh -ec 'for e in $(TARGET); do echo "run $$e"; ./$$e; done'
 
-%_s.S: %.py
-ifeq ($(NASM),1)
-	$(PYTHON) $< -m nasm > $@
-else
+%_gas.S: %.py
 	$(PYTHON) $< -m gas > $@
-endif
 
-%_s.o: %_s.S
-ifeq ($(NASM),1)
-	nasm -f elf64 -o $@ $<
-else
-	$(CXX) -c $< -o $@
-endif
+%_nasm.nasm: %.py
+	$(PYTHON) $< -m nasm > $@
 
-%.exe: %.o %_s.o
+%.exe: %.o %_$(MODE).o
 	$(CXX) $(LDFLAGS) -o $@ $^
 
 %.o: %.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@ -MMD -MP -MF $(@:.o=.d)
+
 DEPEND_FILE=$(addsuffix .d,$(SRC))
 -include $(DEPEND_FILE)
 
 clean:
-	rm -f *.o *.S *.exe *.d
+	rm -f *.o *.S *.exe *.d *.nasm
 
 .PHONY: clean test
 
 # don't remove these files automatically
-.SECONDARY: $(SRC:.cpp=.o) $(SRC:.cpp=_s.o) $(SRC:.cpp=_s.S)
+.SECONDARY: $(SRC:.cpp=.o) $(SRC:.cpp=_s.o) $(SRC:.cpp=_$(MODE).$(SUF))
