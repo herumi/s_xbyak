@@ -7,3 +7,6 @@ test/c.txt
 *.o
 *.d
 CVS
+.cvsignore
+*.S
+*.exe
