@@ -120,7 +120,7 @@ python3 add.py -m masm
 ```nasm
 _text segment
 add2 proc export
-lea rax, [rcx+rdx]
+lea rax, qword ptr [rcx+rdx]
 ret
 add2 endp
 _text ends
