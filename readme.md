@@ -155,7 +155,7 @@ Commentaries:
 - `global_('g_x')`
   - The memory named `g_x` can be accessed from the other files.
 - `dd_(123)`
-  - Put `123` as 64-bit integer.
+  - Put `123` as 32-bit integer.
 - `(rip+'g_x')`
   - Use `rip+` to access by relative addressing.
 - `inc(dword(...))`
