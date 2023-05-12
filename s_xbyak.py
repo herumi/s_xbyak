@@ -298,8 +298,16 @@ class Address:
     else:
       s = '[' + str(self.exp) + ']'
     if g_nasm:
-      tbl = { 128 : 'oword', 256 : 'yword', 512 : 'zword' }
-      if self.bit > 64:
+      tbl = {
+        8 : 'byte',
+        16 : 'word',
+        32 : 'dword',
+        64 : 'qword',
+        128 : 'oword',
+        256 : 'yword',
+        512 : 'zword'
+      }
+      if self.bit > 0 and not self.broadcast:
         s = tbl[self.bit] + ' ' + s
       return s + self.getBroadcastStr() + maskStr
     # g_masm
