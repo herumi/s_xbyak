@@ -377,6 +377,15 @@ class RipReg:
 def ptr(exp):
   return Address(exp)
 
+def byte(exp):
+  return Address(exp, bit=16)
+
+def word(exp):
+  return Address(exp, bit=16)
+
+def dword(exp):
+  return Address(exp, bit=32)
+
 def xword(exp):
   return Address(exp, bit=128)
 
@@ -876,13 +885,16 @@ def makeVar(name, bit, v, const=False, static=False, base=10):
   output(s)
 
 def getNameSuffix(bit):
-  if bit == 128:
-    return 'x'
-  if bit == 256:
-    return 'y'
-  if bit == 512:
-    return 'z'
-  return ''
+  tbl = {
+    8 : 'b',
+    16 : 'w',
+    32 : 'l',
+    64 : 'q',
+    128 : 'x',
+    256 : 'y',
+    512 : 'z',
+  }
+  return tbl.get(bit, '')
 
 def getMemSizeIfMatch(argsType, t):
   if len(argsType) != len(t):
@@ -979,6 +991,8 @@ def genFunc(name):
         elif name in specialNameTbl:
           if arg.bit == 0:
             arg.bit = 128 # default size
+          bitForAddress = arg.bit
+        elif arg.bit > 0:
           bitForAddress = arg.bit
         if g_masm and arg.bit == 0 and bitSize > 0:
           arg.bit = bitSize
