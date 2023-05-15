@@ -1,12 +1,10 @@
 @echo off
-set F1=%1%
-set F2=%2%
+set NAME=%1%
+echo %NAME%
 
-echo F1=%F1%
-echo F2=%F2%
-
-ml64 /nologo /c /Foa.obj %F1%
-ml64 /nologo /c /Fob.obj %F2%
+python3 %NAME%.py -m masm > c.txt
+ml64 /nologo /c /Foa.obj %NAME%_masm.txt
+ml64 /nologo /c /Fob.obj c.txt
 objdump -d a.obj > a.txt
 objdump -d b.obj > b.txt
 diff -w a.txt b.txt
