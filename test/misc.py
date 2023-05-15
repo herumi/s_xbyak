@@ -68,6 +68,7 @@ def miscTest():
   L(L2)
 
 def runTest():
+  vgatherdps(zmm3|k2, ptr(rcx+zmm13*2+64))
   vbroadcastss(zmm1, ptr(rax))
   return
   vcvtpd2dq(xmm19, yword_b (eax+32))
