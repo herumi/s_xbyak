@@ -2,8 +2,6 @@ import sys
 sys.path.append('../')
 from s_xbyak import *
 
-SIMD_BIT=128
-
 def main():
   parser = getDefaultParser()
   param = parser.parse_args()
