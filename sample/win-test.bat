@@ -3,6 +3,8 @@ set NAME=add
 call :run
 set NAME=mem
 call :run
+set NAME=avx
+call :run
 
 
 exit /b
