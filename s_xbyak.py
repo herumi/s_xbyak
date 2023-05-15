@@ -7,6 +7,8 @@ import struct
 import re
 import argparse
 
+VERSION="0.9.0"
+
 def getDefaultParser(description='s_xbyak'):
   parser = argparse.ArgumentParser(description=description)
   parser.add_argument('-win', '--win', help='Win64 ABI(default:Amd64 ABI)', action='store_true')
@@ -14,8 +16,6 @@ def getDefaultParser(description='s_xbyak'):
   return parser
 
 RE_HEX_STR=r'\b0x([0-9a-f]+)\b'
-
-VERSION="0.9.0"
 
 RAX = 0
 RCX = 1
@@ -969,20 +969,14 @@ def genFunc(name):
       return output(name)
 
     # set memory size for masm
-    bitSize = 0
-#    if g_masm:
     bitSize = detectMemSize(name, args)
 
-    # check max bit size of regs and attributes
+    # check attributes
     sae = 0
-    if bitSize == 0:
-      for arg in args:
-        if isinstance(arg, Operand):
-          bitSize = max(bitSize, arg.bit)
-          if arg.attr > 1:
-            sae = arg.attr
-        if isinstance(arg, Address):
-          bitSize = max(bitSize, arg.bit)
+    for arg in args:
+      if isinstance(arg, Operand):
+        if arg.attr > 1:
+          sae = arg.attr
 
     # mnemonic requiring size for Address
     # bitForAddress is used to detect a suffix of a mnemonic in specialNameTbl for gas and masm
