@@ -10,7 +10,7 @@ def main():
   segment('text')
 
   with FuncProc('add_avx'):
-    with StackFrame(4) as sf:
+    with StackFrame(4, vNum=1, vType=T_XMM) as sf:
       pz = sf.p[0]
       px = sf.p[1]
       py = sf.p[2]
