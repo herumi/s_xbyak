@@ -161,6 +161,47 @@ Commentaries:
 - `inc(dword(...))`
   - Use `qword(64-bit)/dword(32-bit)/word(16-bit)/byte(8-bit)` instead of `ptr` to specify the memory size.
 
+## Sample of AVX
+[sample/avx.py](sample/avx.py)
+```python
+def main():
+  parser = getDefaultParser()
+  param = parser.parse_args()
+
+  init(param)
+  segment('text')
+
+  with FuncProc('add_avx'):
+    with StackFrame(4) as sf:
+      pz = sf.p[0]
+      px = sf.p[1]
+      py = sf.p[2]
+      n = sf.p[3]
+      lpL = Label()
+
+      L(lpL)
+      vmovups(xmm0, ptr(px))
+      vaddps(xmm0, xmm0, ptr(py))
+      vmovups(ptr(pz), xmm0)
+      add(px, 16)
+      add(py, 16)
+      add(pz, 16)
+      sub(n, 4)
+      jnz(lpL)
+
+  term()
+```
+
+This is a tiny sample of a label and AVX. This is not fast code.
+
+Commentaries:
+- `lpL = Label()`
+  - Define a label instance.
+- `L(lpL)`
+  - Set lpL here.
+- `jnz(lpL)`
+  - Jump to lpL if non-zero.
+
 # Mnemonics
 
 Most of the mnemonics are the same as defined in the Intel manual except for `and_`, `or_`, `xor_`, `not_`, `in_`, `out_`, `int_`.
