@@ -37,9 +37,29 @@ def genFunc6():
       lea(rax, ptr(rip+'d6'))
       mov(rax, ptr(rax))
 
+def genFunc7():
+  with FuncProc('inc_b'):
+    with StackFrame(1) as sf:
+      inc(byte(sf.p[0]))
+
+def genFunc8():
+  with FuncProc('inc_w'):
+    with StackFrame(1) as sf:
+      inc(word(sf.p[0]))
+
+def genFunc9():
+  with FuncProc('inc_d'):
+    with StackFrame(1) as sf:
+      inc(dword(sf.p[0]))
+
+def genFunc10():
+  with FuncProc('inc_q'):
+    with StackFrame(1) as sf:
+      inc(qword(sf.p[0]))
+
 def genCFuncs():
   print('''#include <cybozu/test.hpp>
-
+#include <stdint.h>
 extern "C" {
 int get_d1();
 int get_d2();
@@ -48,6 +68,10 @@ int get_d4();
 int get_d5();
 int get_d6();
 extern int d5;
+void inc_b(uint64_t *);
+void inc_w(uint64_t *);
+void inc_d(uint64_t *);
+void inc_q(uint64_t *);
 }
 
 CYBOZU_TEST_AUTO(test)
@@ -60,6 +84,19 @@ CYBOZU_TEST_AUTO(test)
   d5 = 9;
   CYBOZU_TEST_EQUAL(get_d5(), 9);
   CYBOZU_TEST_EQUAL(get_d6(), 66666);
+  const uint64_t allOne = ~uint64_t(0);
+  uint64_t q = allOne;
+  inc_b(&q);
+  CYBOZU_TEST_EQUAL(q, allOne << 8);
+  q = allOne;
+  inc_w(&q);
+  CYBOZU_TEST_EQUAL(q, allOne << 16);
+  q = allOne;
+  inc_d(&q);
+  CYBOZU_TEST_EQUAL(q, allOne << 32);
+  q = allOne;
+  inc_q(&q);
+  CYBOZU_TEST_EQUAL(q, 0);
 }
 ''')
 
@@ -104,6 +141,10 @@ def main():
   genFunc4()
   genFunc5()
   genFunc6()
+  genFunc7()
+  genFunc8()
+  genFunc9()
+  genFunc10()
 
 
   term()

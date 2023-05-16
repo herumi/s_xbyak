@@ -386,13 +386,16 @@ def ptr(exp):
   return Address(exp)
 
 def byte(exp):
-  return Address(exp, bit=16)
+  return Address(exp, bit=8)
 
 def word(exp):
   return Address(exp, bit=16)
 
 def dword(exp):
   return Address(exp, bit=32)
+
+def qword(exp):
+  return Address(exp, bit=64)
 
 def xword(exp):
   return Address(exp, bit=128)
