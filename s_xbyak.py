@@ -64,7 +64,7 @@ T_RD =  (3<<1)
 T_RU =  (4<<1)
 T_RZ =  (5<<1)
 
-masmSizePrefixTbl = { 8 : 'b', 16 : '', 32 : 'd', 64 : 'q', 128 : 'xmm', 256 : 'ymm', 512 : 'zmm' }
+masmSizePrefixTbl = { 8 : 'byte', 16 : 'word', 32 : 'dword', 64 : 'qword', 128 : 'xmmword', 256 : 'ymmword', 512 : 'zmmword' }
 
 def mergeAttr(attr1, attr2):
   if (attr1>>1) and (attr2>>1):
@@ -334,11 +334,11 @@ class Address:
       # To distinguish vcvtpd2dq(xmm0, ptr_b(rax)) and vcvtpd2dq(xmm0, yword_b(rax)) on masm, but that doesn't seem to affect NASM (bug?).
       # https://developercommunity.visualstudio.com/t/ml64exe-cant-deal-with-vcvtpd2dq-xmm0/10352105
       if hasattr(self, 'bitForAddress'):
-        s = f'{masmSizePrefixTbl[self.bitForAddress]}word ptr ' + s
-      s = f'{masmSizePrefixTbl[self.bit]}word bcst ' + s
+        s = f'{masmSizePrefixTbl[self.bitForAddress]} ptr ' + s
+      s = f'{masmSizePrefixTbl[self.bit]} bcst ' + s
     else:
       if self.bit > 0:
-        s = f'{masmSizePrefixTbl[self.bit]}word ptr ' + s
+        s = f'{masmSizePrefixTbl[self.bit]} ptr ' + s
     return s + maskStr
 
   def __or__(self, rhs):
@@ -997,7 +997,7 @@ def genFunc(name):
         return
       if g_masm and isinstance(addr, Address) and (isinstance(addr.exp, str) or isinstance(addr.exp, Label) or isinstance(addr.exp, RipReg)):
         s = masmSizePrefixTbl[args[0].bit]
-        output(f'mov {args[0]}, {s}word ptr {addr}')
+        output(f'mov {args[0]}, {s} ptr {addr}')
         return
     if not args:
       return output(name)
