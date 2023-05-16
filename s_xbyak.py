@@ -7,7 +7,7 @@ import struct
 import re
 import argparse
 
-VERSION="0.9.1"
+VERSION="0.9.2"
 
 def getDefaultParser(description='s_xbyak'):
   parser = argparse.ArgumentParser(description=description)
