@@ -46,3 +46,6 @@ vaddps .L2+256(%rip), %zmm1, %zmm0
 vaddps .L1+128(%rip){1to16}, %zmm1, %zmm0
 vaddps .L2+256(%rip){1to16}, %zmm1, %zmm0
 .L2:
+vpdpbusd %xmm2, %xmm1, %xmm0
+{evex} vpdpbusd %xmm2, %xmm1, %xmm0
+{vex} vpdpbusd %xmm2, %xmm1, %xmm0

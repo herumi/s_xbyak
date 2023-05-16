@@ -33,5 +33,8 @@ vaddps zmm0, zmm1, zmmword ptr @L2+256
 vaddps zmm0, zmm1, dword bcst @L1+128
 vaddps zmm0, zmm1, dword bcst @L2+256
 @L2:
+vpdpbusd xmm0, xmm1, xmm2
+evex vpdpbusd xmm0, xmm1, xmm2
+vex vpdpbusd xmm0, xmm1, xmm2
 _text ends
 end

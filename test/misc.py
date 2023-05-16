@@ -66,8 +66,14 @@ def miscTest():
   vaddps(zmm0, zmm1, ptr_b(rip+L1+128));
   vaddps(zmm0, zmm1, ptr_b(rip+L2+256));
   L(L2)
+  vpdpbusd(xmm0, xmm1, xmm2)
+  vpdpbusd(xmm0, xmm1, xmm2, EvexEncoding)
+  vpdpbusd(xmm0, xmm1, xmm2, VexEncoding)
 
 def runTest():
+  vaddpd(zmm2 | k5 | T_z, zmm4, zmm2 | T_rd_sae)
+  vaddpd(zmm2 | k5 | T_z|T_rd_sae, zmm4, zmm2)
+  return
   vgatherdps(zmm3|k2, ptr(rcx+zmm13*2+64))
   vbroadcastss(zmm1, ptr(rax))
   return

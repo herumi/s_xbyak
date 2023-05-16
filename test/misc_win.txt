@@ -44,3 +44,6 @@ vaddps zmm0, zmm1, [rel @L2+256]
 vaddps zmm0, zmm1, [rel @L1+128]{1to16}
 vaddps zmm0, zmm1, [rel @L2+256]{1to16}
 @L2:
+vpdpbusd xmm0, xmm1, xmm2
+{evex} vpdpbusd xmm0, xmm1, xmm2
+{vex} vpdpbusd xmm0, xmm1, xmm2

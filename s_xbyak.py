@@ -211,6 +211,25 @@ T_rd_sae = Attribute(T_RD)
 T_ru_sae = Attribute(T_RU)
 T_rz_sae = Attribute(T_RZ)
 
+class PreferredEncoding:
+  def __init__(self, v):
+    self.v = v
+  def __str__(self):
+    s = ''
+    if self.v == 0:
+      return ''
+    if self.v == 1:
+      s = 'vex' # nasm does not support it?
+    elif self.v == 2:
+      s = 'evex'
+    if g_masm:
+      return s + ' '
+    if g_gas or g_nasm:
+      return f'{{{s}}} '
+
+DefaultEncoding = PreferredEncoding(0)
+VexEncoding = PreferredEncoding(1)
+EvexEncoding = PreferredEncoding(2)
 
 class RegExp:
   def __init__(self, reg, index = None, scale = 1, offset = 0):
@@ -955,8 +974,20 @@ def detectMemSize(name, args):
     return 0
   return minS
 
+# detect encoding by the last args
+def checkEncoding(*args):
+  encoding = DefaultEncoding
+  if len(args) == 0:
+    return (args, encoding)
+  last = args[-1]
+  if last == VexEncoding or last == EvexEncoding:
+    encoding = last
+    return (args[:-1], encoding)
+  return (args, encoding)
+
 def genFunc(name):
   def f(*args):
+    (args, encoding) = checkEncoding(*args)
     # special case (mov reg, label)
     if name == 'mov' and isinstance(args[0], Reg):
       reg = args[0]
@@ -1029,7 +1060,7 @@ def genFunc(name):
     suffix = ''
     if g_gas and bitForAddress > 0:
       suffix = getNameSuffix(bitForAddress)
-    return output(name + suffix + ' ' + s)
+    return output(str(encoding) + name + suffix + ' ' + s)
   return f
 
 def genAllFunc():
