@@ -1126,6 +1126,7 @@ def genAllFunc():
     'movsb','movsd','movshdup','movsldup','movsq','movss','movsw','movsx',
     'movsxd','movupd','movups','movzx','mpsadbw','mul','mulpd','mulps',
     'mulsd','mulss','mulx','mwait','mwaitx','neg','not_','or_',
+    'nop',
     'orpd','orps','out_','outsb','outsd','outsw','pabsb','pabsd',
     'pabsw','packssdw','packsswb','packusdw','packuswb','paddb','paddd','paddq',
     'paddsb','paddsw','paddusb','paddusw','paddw','palignr','pand','pandn',
