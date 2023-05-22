@@ -890,10 +890,10 @@ def double2uint(v):
   return int(struct.pack('>d', v).hex(),16)
 
 def uint2float(v):
-  return struct.unpack('>f', v.to_bytes(4,byteorder='big'))
+  return struct.unpack('>f', v.to_bytes(4,byteorder='big'))[0]
 
 def uint2double(v):
-  return struct.unpack('>d', v.to_bytes(8,byteorder='big'))
+  return struct.unpack('>d', v.to_bytes(8,byteorder='big'))[0]
 
 def makeVar(name, bit, v, const=False, static=False, base=10):
   if not static:
