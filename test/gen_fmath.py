@@ -44,7 +44,7 @@ class ExpGen:
   def data(self):
     makeLabel(LOG2_E)
     v = 1 / math.log(2)
-    dd_(float2uint32(v))
+    dd_(float2uint(v))
 
     # Approximate polynomial of degree 5 of 2^x in [-0.5, 0.5]
     expTbl = [
@@ -58,7 +58,7 @@ class ExpGen:
     assert len(expTbl) == EXP_COEF_N
     makeLabel(EXP_COEF)
     for v in expTbl:
-      dd_(float2uint32(v))
+      dd_(float2uint(v))
 
   def genExpOneAVX512n(self, n, v0, v1, v2):
     un = genUnrollFunc(n)

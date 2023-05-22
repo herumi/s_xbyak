@@ -883,11 +883,17 @@ class FuncProc:
   def __exit__(self, ex_type, ex_value, trace):
     self.close()
 
-def float2uint32(v):
+def float2uint(v):
   return int(struct.pack('>f', v).hex(),16)
 
-def double2uint64(v):
+def double2uint(v):
   return int(struct.pack('>d', v).hex(),16)
+
+def uint2float(v):
+  return struct.unpack('>f', v.to_bytes(4,byteorder='big'))
+
+def uint2double(v):
+  return struct.unpack('>d', v.to_bytes(8,byteorder='big'))
 
 def makeVar(name, bit, v, const=False, static=False, base=10):
   if not static:
