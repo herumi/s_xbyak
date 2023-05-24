@@ -36,5 +36,14 @@ vaddps zmm0, zmm1, dword bcst @L2+256
 vpdpbusd xmm0, xmm1, xmm2
 evex vpdpbusd xmm0, xmm1, xmm2
 vex vpdpbusd xmm0, xmm1, xmm2
+vfmadd213ps zmm0, zmm3, zmmword ptr [rax]
+vfmadd213ps zmm1, zmm4, zmmword ptr [rax+64]
+vfmadd213ps zmm2, zmm5, zmmword ptr [rax+128]
+vfmadd213ps zmm0, zmm3, dword bcst [rax]
+vfmadd213ps zmm1, zmm4, dword bcst [rax]
+vfmadd213ps zmm2, zmm5, dword bcst [rax]
+vfmadd213ps zmm0, zmm3, dword bcst [rax]
+vfmadd213ps zmm1, zmm4, dword bcst [rax+4]
+vfmadd213ps zmm2, zmm5, dword bcst [rax+8]
 _text ends
 end

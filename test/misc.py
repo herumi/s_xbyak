@@ -25,6 +25,25 @@ def maskTest():
   assertEq(str(k2|k1|T_z), 'k2{k1}{z}')
   assertEq(str(xmm1|k2|T_z), 'xmm1{k2}{z}')
 
+SIMD_BYTE=64
+def Unroll(n, op, *args, addrOffset=None):
+  xs = list(args)
+  for i in range(n):
+    ys = []
+    for e in xs:
+      if isinstance(e, list):
+        ys.append(e[i])
+      elif isinstance(e, Address):
+        if addrOffset == None:
+          if e.broadcast:
+            addrOffset = 0
+          else:
+            addrOffset = SIMD_BYTE
+        ys.append(e + addrOffset*i)
+      else:
+        ys.append(e)
+    op(*ys)
+
 def miscTest():
   vbroadcastss(zmm1, ptr(rax))
   vaddpd(zmm2, zmm5, zmm30)
@@ -69,6 +88,12 @@ def miscTest():
   vpdpbusd(xmm0, xmm1, xmm2)
   vpdpbusd(xmm0, xmm1, xmm2, EvexEncoding)
   vpdpbusd(xmm0, xmm1, xmm2, VexEncoding)
+
+  v2 = [zmm0, zmm1, zmm2]
+  v1 = [zmm3, zmm4, zmm5]
+  Unroll(3, vfmadd213ps, v2, v1, ptr(rax))
+  Unroll(3, vfmadd213ps, v2, v1, ptr_b(rax))
+  Unroll(3, vfmadd213ps, v2, v1, ptr_b(rax), addrOffset=4)
 
 def runTest():
   vaddpd(zmm2 | k5 | T_z, zmm4, zmm2 | T_rd_sae)

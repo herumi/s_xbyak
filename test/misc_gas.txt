@@ -50,3 +50,12 @@ vaddps .L2+256(%rip){1to16}, %zmm1, %zmm0
 vpdpbusd %xmm2, %xmm1, %xmm0
 {evex} vpdpbusd %xmm2, %xmm1, %xmm0
 {vex} vpdpbusd %xmm2, %xmm1, %xmm0
+vfmadd213ps (%rax), %zmm3, %zmm0
+vfmadd213ps 64(%rax), %zmm4, %zmm1
+vfmadd213ps 128(%rax), %zmm5, %zmm2
+vfmadd213ps (%rax){1to16}, %zmm3, %zmm0
+vfmadd213ps (%rax){1to16}, %zmm4, %zmm1
+vfmadd213ps (%rax){1to16}, %zmm5, %zmm2
+vfmadd213ps (%rax){1to16}, %zmm3, %zmm0
+vfmadd213ps 4(%rax){1to16}, %zmm4, %zmm1
+vfmadd213ps 8(%rax){1to16}, %zmm5, %zmm2
