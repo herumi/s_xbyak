@@ -104,7 +104,7 @@ mie_string_test: ./mie_string_test.exe
 	./mie_string_test.exe
 
 clean:
-	rm -f a.txt b.txt c.txt *.o *.S *.exe *.d
+	rm -f a.txt b.txt c.txt *.o *.S *.exe *.d *.nasm
 
 .PHONY: clean test
 
