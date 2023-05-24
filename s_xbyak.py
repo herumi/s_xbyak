@@ -699,16 +699,18 @@ def init(param):
     output('; for masm (ml64.exe)')
   else:
     output('''; for nasm
+%ifidn __OUTPUT_FORMAT__,macho64
 %imacro _global 1
-  %ifdef ADD_UNDERSCORE
-    global _%1
-    %1:
-    _%1:
-  %else
-    global %1
-    %1:
-  %endif
+  global _%1
+  %1:
+  _%1:
 %endmacro
+%else
+%imacro _global 1
+  global %1
+  %1:
+%endmacro
+%endif
 %ifidn __OUTPUT_FORMAT__,elf64
 section .note.GNU-stack noalloc noexec nowrite progbits
 %endif

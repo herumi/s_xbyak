@@ -1,6 +1,6 @@
 UNAME_S=$(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
- NASM_OPT=-f macho64 -DADD_UNDERSCORE
+ NASM_OPT=-f macho64
 else
  NASM_OPT=-f elf64
 endif
