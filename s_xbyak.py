@@ -288,6 +288,8 @@ class Address:
     r.bit = self.bit
     r.broadcast = self.broadcast
     r.broadcastRate = self.broadcastRate
+    if hasattr(self, 'k'):
+      r.k = self.k
     return r
 
   # compute X of {1toX} by bitSize and T_B64, T_B32.
@@ -1029,9 +1031,11 @@ def genFunc(name):
     bitForAddress = 0
     specialNameTbl = ['vcvtpd2dq', 'vcvtpd2ps', 'vcvttpd2dq', 'vcvtqq2ps', 'vcvtuqq2ps', 'vcvtpd2udq', 'vcvttpd2udq', 'vfpclasspd', 'vfpclassps']
 
+    param = []
     # set bit size to Address
-    for arg in args:
-      if isinstance(arg, Address):
+    for arg_ in args:
+      if isinstance(arg_, Address):
+        arg = arg_.copy()
         if arg.broadcast:
           if g_masm and arg.bit > 64:
             arg.bitForAddress = arg.bit
@@ -1044,8 +1048,9 @@ def genFunc(name):
           bitForAddress = arg.bit
         if g_masm and arg.bit == 0 and bitSize > 0:
           arg.bit = bitSize
-
-    param = list(args)
+      else:
+        arg = arg_
+      param.append(arg)
 
     # insert sae at the end of arguments.
     # if the last argument is immediate, insert sae at the front of it.
