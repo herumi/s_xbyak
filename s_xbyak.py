@@ -729,6 +729,7 @@ def output(s):
 
 g_segment_data = False
 
+MASM_SEG_SUF='$x'
 def segment(mode):
   if g_masm:
     global g_segment_data
@@ -736,12 +737,16 @@ def segment(mode):
       g_segment_data = True
     if mode == 'text':
       if g_segment_data:
-        output(f'_data ends')
+        output(f'_data{MASM_SEG_SUF} ends')
         g_segment_data = False
   if g_gas:
     output(f'.{mode}')
   elif g_masm:
-    output(f'_{mode} segment')
+    if MASM_SEG_SUF:
+      # use MASM_SEG_SUF for align(64). it will be merged ot {mode}.
+      output(f'_{mode}{MASM_SEG_SUF} segment align(64) execute')
+    else:
+      output(f'_{mode} segment')
   else:
     output(f'segment .{mode}')
 
@@ -836,7 +841,7 @@ def L(label):
 
 def term():
   if g_masm:
-    output('_text ends')
+    output(f'_text{MASM_SEG_SUF} ends')
     output('end')
 
   n = len(g_text)
