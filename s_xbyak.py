@@ -95,7 +95,7 @@ class Operand:
     if self.kind == T_XMM: return 'xmm'
     if self.kind == T_YMM: return 'ymm'
     if self.kind == T_ZMM: return 'zmm'
-    if self.kind == T_MASK: return 'mask'
+    if self.kind == T_MASK: return 'k'
     raise Exception('not supported type', self)
 
   def __str__(self):
