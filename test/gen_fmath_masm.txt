@@ -1,5 +1,5 @@
 ; for masm (ml64.exe)
-_data$x segment align(64) execute
+_data$x segment align(64)
 log2_e:
 dd 1069066811
 exp_coef:

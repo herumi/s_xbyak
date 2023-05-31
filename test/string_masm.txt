@@ -1,5 +1,5 @@
 ; for masm (ml64.exe)
-_data$x segment align(64) execute
+_data$x segment align(64)
 shiftPtn:
 db 0
 db 1
