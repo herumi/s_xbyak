@@ -744,7 +744,8 @@ def segment(mode):
   elif g_masm:
     if MASM_SEG_SUF:
       # use MASM_SEG_SUF for align(64). it will be merged ot {mode}.
-      output(f'_{mode}{MASM_SEG_SUF} segment align(64) execute')
+      attr = ' execute' if mode == 'text' else ''
+      output(f'_{mode}{MASM_SEG_SUF} segment align(64){attr}')
     else:
       output(f'_{mode} segment')
   else:
