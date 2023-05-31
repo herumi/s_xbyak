@@ -851,8 +851,13 @@ def term():
       i += 2
       continue
     if g_masm:
-      ## convert 0x123a => 123ah
-      s = re.sub(RE_HEX_STR, r'\1h', s)
+      ## convert 0x123a => 123ah, 0xab => 0abh
+      def f(m):
+        s = m.group(1)
+        if not s[0].isdigit():
+          s = '0' + s
+        return s + 'h'
+      s = re.sub(RE_HEX_STR, f, s)
     print(s)
     i += 1
 
