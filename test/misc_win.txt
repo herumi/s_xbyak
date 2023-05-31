@@ -61,3 +61,5 @@ vfmadd213ps zmm2, zmm5, [rax]{1to16}
 vfmadd213ps zmm0, zmm3, [rax]{1to16}
 vfmadd213ps zmm1, zmm4, [rax+4]{1to16}
 vfmadd213ps zmm2, zmm5, [rax+8]{1to16}
+vcmpltps k1, zmm1, [rax]
+vcmpltps k2, zmm1, [rax]{1to16}

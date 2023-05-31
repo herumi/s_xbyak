@@ -45,5 +45,7 @@ vfmadd213ps zmm2, zmm5, dword bcst [rax]
 vfmadd213ps zmm0, zmm3, dword bcst [rax]
 vfmadd213ps zmm1, zmm4, dword bcst [rax+4]
 vfmadd213ps zmm2, zmm5, dword bcst [rax+8]
+vcmpltps k1, zmm1, zmmword ptr [rax]
+vcmpltps k2, zmm1, dword bcst [rax]
 _text$x ends
 end

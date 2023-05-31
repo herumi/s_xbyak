@@ -95,6 +95,9 @@ def miscTest():
   Unroll(3, vfmadd213ps, v2, v1, ptr_b(rax))
   Unroll(3, vfmadd213ps, v2, v1, ptr_b(rax), addrOffset=4)
 
+  vcmpltps(k1, zmm1, ptr(rax))
+  vcmpltps(k2, zmm1, ptr_b(rax))
+
 def runTest():
   vaddpd(zmm2 | k5 | T_z, zmm4, zmm2 | T_rd_sae)
   vaddpd(zmm2 | k5 | T_z|T_rd_sae, zmm4, zmm2)
