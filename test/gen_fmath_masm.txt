@@ -1,5 +1,5 @@
 ; for masm (ml64.exe)
-_data segment
+_data$x segment align(64) execute
 log2_e:
 dd 1069066811
 exp_coef:
@@ -9,8 +9,8 @@ dd 1047919883
 dd 1029920650
 dd 1008624482
 dd 984584985
-_data ends
-_text segment
+_data$x ends
+_text$x segment align(64) execute
 align 16
 fmath_exp_v_avx512 proc export
 sub rsp, 904
@@ -150,5 +150,5 @@ vmovups zmm18, zmmword ptr [rsp+832]
 add rsp, 904
 ret
 fmath_exp_v_avx512 endp
-_text ends
+_text$x ends
 end

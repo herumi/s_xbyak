@@ -1,5 +1,5 @@
 ; for masm (ml64.exe)
-_data segment
+_data$x segment align(64) execute
 shiftPtn:
 db 0
 db 1
@@ -33,8 +33,8 @@ db 128
 db 128
 db 128
 db 128
-_data ends
-_text segment
+_data$x ends
+_text$x segment align(64) execute
 mie_findCharAnyAVX proc export
 mov r10, rcx
 mov r11, rdx
@@ -133,5 +133,5 @@ ret
 xor eax, eax
 ret
 mie_findCharRangeAVX endp
-_text ends
+_text$x ends
 end
