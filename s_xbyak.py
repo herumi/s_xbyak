@@ -751,17 +751,25 @@ def segment(mode):
   else:
     output(f'segment .{mode}')
 
+def listToStr(a):
+  if isinstance(a, list):
+    return ','.join(map(str, a))
+  return a
+
 def db_(s):
+  s = listToStr(s)
   if g_gas:
     output(f'.byte {s}')
   else:
     output(f'db {s}')
 def dd_(s):
+  s = listToStr(s)
   if g_gas:
     output(f'.long {s}')
   else:
     output(f'dd {s}')
 def dq_(s):
+  s = listToStr(s)
   if g_gas:
     output(f'.quad {s}')
   else:
