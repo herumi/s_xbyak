@@ -99,6 +99,11 @@ def miscTest():
   vcmpltps(k2, zmm1, ptr_b(rax))
 
 def runTest():
+  vpclmullqlqdq(zmm1, zmm2, zmm3)
+  vpclmulhqlqdq(zmm1, zmm2, zmm3)
+  vpclmullqhqdq(zmm1, zmm2, zmm3)
+  vpclmulhqhqdq(zmm1, zmm2, zmm3)
+  return
   vaddpd(zmm2 | k5 | T_z, zmm4, zmm2 | T_rd_sae)
   vaddpd(zmm2 | k5 | T_z|T_rd_sae, zmm4, zmm2)
   return
