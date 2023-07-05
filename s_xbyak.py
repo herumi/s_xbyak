@@ -1312,6 +1312,7 @@ def genAllFunc():
     'vunpckhpd','vunpckhps','vunpcklpd','vunpcklps','vxorpd','vxorps','vzeroall','vzeroupper',
     'wait','wbinvd','wrmsr','xadd','xgetbv','xlatb','xor_','xorpd',
     'xorps',
+    'vpclmullqlqdq', 'vpclmulhqlqdq', 'vpclmullqhqdq', 'vpclmulhqhqdq',
   ]
   for name in tbl:
     asmName = name.strip('_')
