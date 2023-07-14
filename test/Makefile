@@ -16,6 +16,9 @@ test:
 	make test1 FILE=misc
 #	$(PYTHON) misc.py
 
+update:
+	$(MAKE) test UPDATE=1
+
 test_misc:
 	$(PYTHON) misc.py
 
@@ -31,7 +34,15 @@ test1_masm:
 	$(PYTHON) $(FILE).py -m masm > c.txt
 	diff $(DIFF_OPT) $(FILE)_masm.txt c.txt
 
+update1:
+ifeq ($(UPDATE),1)
+	$(PYTHON) $(FILE).py -m gas > $(FILE)_gas.txt
+	$(PYTHON) $(FILE).py -win > $(FILE)_win.txt
+	$(PYTHON) $(FILE).py -m masm > $(FILE)_masm.txt
+endif
+
 test1:
+	$(MAKE) update1
 	$(MAKE) test1_gas
 	$(MAKE) test1_win
 	$(MAKE) test1_masm
