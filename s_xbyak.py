@@ -532,6 +532,7 @@ def getRdxPos():
 def getNoSaveNum():
   return 6 if win64ABI else 8
 
+XMM_BYTE_SIZE = 16
 def getSimdSize(vType):
   if vType == 0: return 0
   if vType == T_SSE: return 16
@@ -572,9 +573,11 @@ class StackFrame:
       raise Exception('specify vType')
     self.vType = vType
 
-    maxFreeN = 5 if win64ABI else 7
+    maxFreeN = 5 if win64ABI else 32
     self.maxFreeN = maxFreeN
     saveSimdN = max(vNum - maxFreeN, 0)
+    if win64ABI:
+      saveSimdN = min(saveSimdN, 11) # save only xmm6-xmm15
     self.saveSimdN = saveSimdN
     simdSize = getSimdSize(vType)
     self.simdSize = simdSize
@@ -590,7 +593,7 @@ class StackFrame:
     if saveSimdN > 0:
       if self.P & 1 > 0:
         self.P += 1
-      self.P += (saveSimdN * simdSize) // 8
+      self.P += (saveSimdN * XMM_BYTE_SIZE) // 8
       self.saveTop = (stackSizeByte + 15) & ~15
     # 16 byte alignment
     if self.P > 0 and (self.P & 1) == (self.saveNum & 1):
@@ -602,13 +605,9 @@ class StackFrame:
     # store SIMD registers
     for i in range(saveSimdN):
       if vType == T_SSE:
-        movups(ptr(rsp + self.saveTop + i * simdSize), Xmm(maxFreeN+i))
-      elif vType == T_XMM:
-        vmovups(ptr(rsp + self.saveTop + i * simdSize), Xmm(maxFreeN+i))
-      elif vType == T_YMM:
-        vmovups(ptr(rsp + self.saveTop + i * simdSize), Ymm(maxFreeN+i))
-      elif vType == T_ZMM:
-        vmovups(ptr(rsp + self.saveTop + i * simdSize), Zmm(maxFreeN+i))
+        movups(ptr(rsp + self.saveTop + i * XMM_BYTE_SIZE), Xmm(maxFreeN+i))
+      else:
+        vmovups(ptr(rsp + self.saveTop + i * XMM_BYTE_SIZE), Xmm(maxFreeN+i))
     for i in range(pNum):
       self.p.append(self.getRegIdx())
     for i in range(tNum):
@@ -621,19 +620,14 @@ class StackFrame:
     # restore SIMD registers
     saveSimdN = self.saveSimdN
     maxFreeN = self.maxFreeN
-    simdSize = self.simdSize
     vType = self.vType
     for i in range(saveSimdN):
       if vType == T_SSE:
-        movups(Xmm(maxFreeN+i), ptr(rsp + self.saveTop + i * simdSize))
-      elif vType == T_XMM:
-        vmovups(Xmm(maxFreeN+i), ptr(rsp + self.saveTop + i * simdSize))
-      elif vType == T_YMM:
-        vmovups(Ymm(maxFreeN+i), ptr(rsp + self.saveTop + i * simdSize))
-      elif vType  == T_ZMM:
-        vmovups(Zmm(maxFreeN+i), ptr(rsp + self.saveTop + i * simdSize))
-#    if saveSimdN > 0 and vType in [T_XMM, T_YMM, T_ZMM]:
-#      vzeroupper()
+        movups(Xmm(maxFreeN+i), ptr(rsp + self.saveTop + i * XMM_BYTE_SIZE))
+      else:
+        vmovups(Xmm(maxFreeN+i), ptr(rsp + self.saveTop + i * XMM_BYTE_SIZE))
+    if vType > 0:
+      vzeroupper()
 
     if self.P > 0:
       add(rsp, self.P)
