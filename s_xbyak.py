@@ -561,6 +561,7 @@ class StackFrame:
     self.p = []
     self.t = []
     self.v = []
+    self.isCalledClose = False
     allRegNum = pNum + tNum + (1 if useRDX else 0) + (1 if useRCX else 0)
     noSaveNum = getNoSaveNum()
     self.saveNum = max(0, allRegNum - noSaveNum)
@@ -617,6 +618,9 @@ class StackFrame:
     if self.useRDX and getRdxPos() < pNum:
       mov(r11, rdx)
   def close(self, callRet=True):
+    if self.isCalledClose:
+      return
+    self.isCalledClose = True
     # restore SIMD registers
     saveSimdN = self.saveSimdN
     maxFreeN = self.maxFreeN
