@@ -68,8 +68,8 @@ Commentaries:
 
 ## How to generate an ASM for GAS
 
-```
-python3 add.py -m gas > add_s.S
+```shell-session
+$ python3 add.py -m gas > add_s.S
 ```
 
 ```gas
@@ -87,7 +87,7 @@ SIZE(add2)
 ## How to generate an ASM for NASM
 
 For Linux/Intel macOS
-```
+```python
 python3 add.py -m nasm
 ```
 
@@ -99,8 +99,8 @@ ret
 ```
 
 For Windows
-```
-python3 add.py -m nasm -win
+```shell-session
+> python3 add.py -m nasm -win
 ```
 
 ```nasm
@@ -113,8 +113,8 @@ ret
 
 ## How to generate an ASM for MASM
 
-```
-python3 add.py -m masm
+```shell-shession
+$ python3 add.py -m masm
 ```
 
 ```nasm
