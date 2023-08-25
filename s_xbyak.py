@@ -1032,6 +1032,14 @@ def genFunc(name):
         s = masmSizePrefixTbl[args[0].bit]
         output(f'mov {args[0]}, {s} ptr {addr}')
         return
+    if name in ['jmp', 'call']:
+      if g_gas and (isinstance(args[0], Reg) or isinstance(args[0], Address)):
+        output(f'{name} *{args[0]}')
+        return
+      if g_masm and isinstance(args[0], Address):
+        output(f'{name} qword ptr {args[0]}')
+        return
+
     if not args:
       return output(name)
 
@@ -1101,7 +1109,7 @@ def genFunc(name):
 
 def genAllFunc():
   tbl = [
-    'push', 'mov', 'pop', 'jmp', 'test',
+    'push', 'mov', 'pop', 'jmp', 'call', 'test',
     'aaa','aad','aadd','aam','aand','aas','adc','adcx',
     'add','addpd','addps','addsd','addss','addsubpd','addsubps','adox',
     'aesdec','aesdeclast','aesenc','aesenclast','aesimc','aeskeygenassist','and_','andn',
