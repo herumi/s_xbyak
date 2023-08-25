@@ -98,7 +98,17 @@ def miscTest():
   vcmpltps(k1, zmm1, ptr(rax))
   vcmpltps(k2, zmm1, ptr_b(rax))
 
+  jmp(rax)
+  jmp(ptr(rax))
+  call(rax)
+  call(ptr(rax))
+
 def runTest():
+  jmp(rax)
+  jmp(ptr(rax))
+  call(rax)
+  call(ptr(rax))
+  return
   vpclmullqlqdq(zmm1, zmm2, zmm3)
   vpclmulhqlqdq(zmm1, zmm2, zmm3)
   vpclmullqhqdq(zmm1, zmm2, zmm3)

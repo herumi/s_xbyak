@@ -61,3 +61,7 @@ vfmadd213ps 4(%rax){1to16}, %zmm4, %zmm1
 vfmadd213ps 8(%rax){1to16}, %zmm5, %zmm2
 vcmpltps (%rax), %zmm1, %k1
 vcmpltps (%rax){1to16}, %zmm1, %k2
+jmp *%rax
+jmp *(%rax)
+call *%rax
+call *(%rax)
