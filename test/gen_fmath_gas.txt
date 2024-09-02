@@ -24,7 +24,7 @@ PRE(exp_coef):
 .long 1008624482
 .long 984584985
 .text
-.align 16
+.balign 16
 .global PRE(fmath_exp_v_avx512)
 PRE(fmath_exp_v_avx512):
 TYPE(fmath_exp_v_avx512)

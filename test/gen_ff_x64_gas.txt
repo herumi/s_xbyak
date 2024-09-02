@@ -21,7 +21,7 @@ PRE(zero):
 PRE(ip):
 .quad 9940570264628428797
 .text
-.align 16
+.balign 16
 .global PRE(mcl_fp_add)
 PRE(mcl_fp_add):
 TYPE(mcl_fp_add)
@@ -79,7 +79,7 @@ pop %rbp
 pop %rbx
 ret
 SIZE(mcl_fp_add)
-.align 16
+.balign 16
 .global PRE(mcl_fp_sub)
 PRE(mcl_fp_sub):
 TYPE(mcl_fp_sub)
@@ -132,7 +132,7 @@ pop %rbp
 pop %rbx
 ret
 SIZE(mcl_fp_sub)
-.align 16
+.balign 16
 .global PRE(mcl_fp_mul)
 PRE(mcl_fp_mul):
 TYPE(mcl_fp_mul)
