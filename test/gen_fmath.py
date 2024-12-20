@@ -10,34 +10,6 @@ EXP_COEF_N = 6
 EXP_CONST_N = EXP_COEF_N + 1 # coeff[], log2_e
 EXP_TMP_N = 3
 EXP_UNROLL = 4
-SIMD_BYTE = 64
-
-# expand args
-# Unroll(2, op, [xm0, xm1], [xm2, xm3], xm4)
-# -> op(xm0, xm2, xm4)
-#    op(xm1, xm3, xm4)
-def Unroll(n, op, *args):
-  xs = list(args)
-  for i in range(n):
-    ys = []
-    for e in xs:
-      if isinstance(e, list):
-        ys.append(e[i])
-      elif isinstance(e, Address) and not e.broadcast:
-        ys.append(e + SIMD_BYTE*i)
-      else:
-        ys.append(e)
-    op(*ys)
-
-def genUnrollFunc(n):
-  """
-    return a function takes op and outputs a function that takes *args and outputs n unrolled op
-  """
-  def fn(op):
-    def gn(*args):
-      Unroll(n, op, *args)
-    return gn
-  return fn
 
 # exp_v(float *dst, const float *src, size_t n);
 class ExpGen:
@@ -61,7 +33,7 @@ class ExpGen:
       dd_(float2uint(v))
 
   def genExpOneAVX512n(self, n, v0, v1, v2):
-    un = genUnrollFunc(n)
+    un = genUnrollFunc()
     un(vmulps)(v0, v0, self.log2_e)
     un(vrndscaleps)(v1, v0, 0) # n = round(x)
     un(vsubps)(v0, v0, v1) # a = x - n
@@ -89,7 +61,7 @@ class ExpGen:
         constPos = EXP_TMP_N*EXP_UNROLL
         self.expCoeff = sf.v[constPos:constPos+EXP_COEF_N]
         self.log2_e = sf.v[constPos+EXP_COEF_N]
-        un = genUnrollFunc(EXP_UNROLL)
+        un = genUnrollFunc()
         vbroadcastss(self.log2_e, ptr(rip+LOG2_E))
         for i in range(EXP_COEF_N):
           vbroadcastss(self.expCoeff[i], ptr(rip + EXP_COEF + 4 * i))

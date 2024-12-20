@@ -25,25 +25,6 @@ def maskTest():
   assertEq(str(k2|k1|T_z), 'k2{k1}{z}')
   assertEq(str(xmm1|k2|T_z), 'xmm1{k2}{z}')
 
-SIMD_BYTE=64
-def Unroll(n, op, *args, addrOffset=None):
-  xs = list(args)
-  for i in range(n):
-    ys = []
-    for e in xs:
-      if isinstance(e, list):
-        ys.append(e[i])
-      elif isinstance(e, Address):
-        if addrOffset == None:
-          if e.broadcast:
-            addrOffset = 0
-          else:
-            addrOffset = SIMD_BYTE
-        ys.append(e + addrOffset*i)
-      else:
-        ys.append(e)
-    op(*ys)
-
 def miscTest():
   vbroadcastss(zmm1, ptr(rax))
   vaddpd(zmm2, zmm5, zmm30)
@@ -91,9 +72,11 @@ def miscTest():
 
   v2 = [zmm0, zmm1, zmm2]
   v1 = [zmm3, zmm4, zmm5]
-  Unroll(3, vfmadd213ps, v2, v1, ptr(rax))
-  Unroll(3, vfmadd213ps, v2, v1, ptr_b(rax))
-  Unroll(3, vfmadd213ps, v2, v1, ptr_b(rax), addrOffset=4)
+  un = genUnrollFunc()
+  un(vfmadd213ps)(v2, v1, ptr(rax))
+  un(vfmadd213ps)(v2, v1, ptr_b(rax))
+  un4 = genUnrollFunc(addrOffset=4)
+  un4(vfmadd213ps)(v2, v1, ptr_b(rax))
 
   vcmpltps(k1, zmm1, ptr(rax))
   vcmpltps(k2, zmm1, ptr_b(rax))
