@@ -15,7 +15,7 @@ DIFF_OPT=-urN
 	$(CXX) -c $<
 
 
-SRC=avx.cpp add.cpp mem.cpp
+SRC=avx.cpp add.cpp mem.cpp ext.cpp
 TARGET=$(SRC:.cpp=.exe)
 
 CFLAGS=-DNDEBUG -O2
