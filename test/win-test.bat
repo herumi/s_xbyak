@@ -1,14 +1,8 @@
 @echo off
-set FILE=gen_fmath
-call :test1
-set FILE=string
-call :test1
-set FILE=gen_ff_x64
-call :test1
-set FILE=gen_bint_x64
-call :test1
-set FILE=misc
-call :test1
+for %%i in (gen_fmath string gen_ff_x64 gen_bint_x64 misc) do (
+  set FILE=%%i
+  call :test1
+)
 
 exit /b
 
