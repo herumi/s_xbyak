@@ -8,7 +8,7 @@ def main():
 
   init(param)
   segment('data')
-  extern_('g_a', 3)
+  extern_('g_a', 'dword')
   segment('text')
 
   with FuncProc('sum3'):
@@ -16,6 +16,7 @@ def main():
       mov(eax, ptr(rip+'g_a'))
       add(eax, ptr(rip+'g_a'+4))
       add(eax, ptr(rip+'g_a'+8))
+      #vmovups(xm0, ptr(rip+'g_a'))
 
   term()
 
