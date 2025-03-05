@@ -1,10 +1,8 @@
 @echo off
-set NAME=add
-call :run
-set NAME=mem
-call :run
-set NAME=avx
-call :run
+for %%i in (add mem avx ext) do (
+    set NAME=%%i
+    call :run
+)
 
 
 exit /b
