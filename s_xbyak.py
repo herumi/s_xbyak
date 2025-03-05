@@ -832,7 +832,10 @@ def global_(s):
     output(f'_global {s}')
     if not win64ABI:
       output(f'{s}:')
-def extern_(s, size):
+def extern_(s, size='qword'):
+  '''
+  size is used by only masm
+  '''
   if g_gas:
     output(f'.extern PRE({s})')
   elif g_masm:
