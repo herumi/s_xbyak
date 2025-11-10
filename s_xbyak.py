@@ -217,7 +217,7 @@ class Reg(Operand):
     self.bit = bit
     if bit < 128:
       self.kind = T_REG
-      self.attr = None
+      self.attr = 0
 
   def changeBit(self, bit):
     r = Reg(self.idx, self.bit, self.ext8bit)
