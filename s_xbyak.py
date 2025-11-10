@@ -100,15 +100,20 @@ class Operand:
 
   def __str__(self):
     if self.kind == T_REG:
+      s = '%' if g_gas else ''
       if self.bit == 64:
         tbl = ['rax', 'rcx', 'rdx', 'rbx', 'rsp', 'rbp', 'rsi', 'rdi', 'r8', 'r9', 'r10',  'r11', 'r12', 'r13', 'r14', 'r15']
       elif self.bit == 32:
         tbl = ['eax', 'ecx', 'edx', 'ebx', 'esp', 'ebp', 'esi', 'edi', 'r8d', 'r9d', 'r10d',  'r11d', 'r12d', 'r13d', 'r14d', 'r15d']
+      elif self.bit == 16:
+        tbl = ['ax', 'cx', 'dx', 'bx', 'sp', 'bp', 'si', 'di', 'r8w', 'r9w', 'r10w',  'r11w', 'r12w', 'r13w', 'r14w', 'r15w']
       elif self.bit == 8:
+        if self.ext8bit:
+          tbl = ['spl', 'bpl', 'sil', 'dil']
+          return s + tbl[self.idx - 4]
         tbl = ['al', 'cl', 'dl', 'bl', 'ah', 'ch', 'dh', 'bh', 'r8b', 'r9b', 'r10b',  'r11b', 'r12b', 'r13b', 'r14b', 'r15b']
       else:
-        raise Exception('bad bit', self.bit)
-      s = '%' if g_gas else ''
+        raise Exception('bad bit', self.kind, self.bit)
       return s + tbl[self.idx]
 
     # xmm4|k3, k1|k2
@@ -177,8 +182,47 @@ class Operand:
       raise Exception('bad arg', k)
 
 class Reg(Operand):
-  def __init__(self, idx, bit):
+  def __init__(self, idx, bit, ext8bit=False):
     super().__init__(idx, bit, T_REG)
+    if bit == 128:
+      self.kind = T_XMM
+    elif bit == 256:
+      self.kind = T_YMM
+    elif bit == 512:
+      self.kind = T_ZMM
+    self.ext8bit = ext8bit
+
+  def setBit(self, bit):
+    if bit not in [8, 16, 32, 64, 128, 256, 512]:
+      raise Exception('bad bit size', self, bit)
+    if self.bit == bit:
+      return
+    idx = self.idx
+    if self.bit == 8 and (4 <= idx < 8) and not self.ext8bit:
+      raise Exception('bad converting of ah, bh, ch, dh', self)
+    if bit == 8:
+      if idx >= 32:
+        raise Exception('bad 8bit conversion', self, idx)
+      if 4 <= idx < 8:
+        self.ext8bit = True
+    elif bit in [16, 32, 64]:
+      if idx >= 32:
+        raise Exception(f'bad {bit} conversion', idx)
+    elif bit == 128:
+      self.kind = T_XMM
+    elif bit == 256:
+      self.kind = T_YMM
+    elif bit == 512:
+      self.kind = T_ZMM
+    self.bit = bit
+    if bit < 128:
+      self.kind = T_REG
+      self.attr = None
+
+  def changeBit(self, bit):
+    r = Reg(self.idx, self.bit, self.ext8bit)
+    r.setBit(bit)
+    return r
 
 class Xmm(Reg):
   def __init__(self, idx):
@@ -494,6 +538,11 @@ r12b = Reg(R12, 8)
 r13b = Reg(R13, 8)
 r14b = Reg(R14, 8)
 r15b = Reg(R15, 8)
+
+spl = Reg(4, 8, True)
+bpl = Reg(5, 8, True)
+sil = Reg(6, 8, True)
+dil = Reg(7, 8, True)
 
 # define xmm, ymm, zmm registers
 for (p, cstr) in [('x', Xmm), ('y', Ymm), ('z', Zmm)]:

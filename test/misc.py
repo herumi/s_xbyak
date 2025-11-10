@@ -25,6 +25,26 @@ def maskTest():
   assertEq(str(k2|k1|T_z), 'k2{k1}{z}')
   assertEq(str(xmm1|k2|T_z), 'xmm1{k2}{z}')
 
+def cvtTest():
+  sizeTbl = [8, 16, 32, 64, 128, 256, 512]
+  tbl = {
+    'eax':['al', 'ax', 'eax', 'rax', 'xmm0', 'ymm0', 'zmm0'],
+    'ecx':['cl', 'cx', 'ecx', 'rcx', 'xmm1', 'ymm1', 'zmm1'],
+    'edx':['dl', 'dx', 'edx', 'rdx', 'xmm2', 'ymm2', 'zmm2'],
+    'ebx':['bl', 'bx', 'ebx', 'rbx', 'xmm3', 'ymm3', 'zmm3'],
+    'esp':['spl', 'sp', 'esp', 'rsp', 'xmm4', 'ymm4', 'zmm4'],
+    'ebp':['bpl', 'bp', 'ebp', 'rbp', 'xmm5', 'ymm5', 'zmm5'],
+    'esi':['sil', 'si', 'esi', 'rsi', 'xmm6', 'ymm6', 'zmm6'],
+    'edi':['dil', 'di', 'edi', 'rdi', 'xmm7', 'ymm7', 'zmm7'],
+  }
+  for (k, regs) in tbl.items():
+    r = globals()[k]
+    for i in range(len(sizeTbl)):
+      r2 = r.changeBit(sizeTbl[i])
+      assertEq(str(r2), regs[i])
+      for j in range(len(sizeTbl)):
+        assertEq(str(r2.changeBit(sizeTbl[j])), regs[j])
+
 def miscTest():
   vbroadcastss(zmm1, ptr(rax))
   vaddpd(zmm2, zmm5, zmm30)
@@ -117,6 +137,7 @@ def runTest():
 def main():
   # before calling init()
   maskTest()
+  cvtTest()
 
   parser = getDefaultParser()
   parser.add_argument('-run', help='run runTest', action='store_true')
