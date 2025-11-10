@@ -1,0 +1,23 @@
+name: test
+on:
+  push:
+    branches:
+      - '*'
+
+defaults:
+  run:
+    shell: sh
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:testing
+    steps:
+    - uses: actions/checkout@v4
+    - run: apt -y update
+    - run: apt -y install make nasm
+    - run: make test
