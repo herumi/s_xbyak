@@ -19,5 +19,5 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - run: apt -y update
-    - run: apt -y install make nasm
+    - run: apt -y install make nasm python3
     - run: make test
