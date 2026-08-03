@@ -679,7 +679,7 @@ class StackFrame:
         movups(Xmm(maxFreeN+i), ptr(rsp + self.saveTop + i * XMM_BYTE_SIZE))
       else:
         vmovups(Xmm(maxFreeN+i), ptr(rsp + self.saveTop + i * XMM_BYTE_SIZE))
-    if vType > 0:
+    if vType in [T_YMM, T_ZMM]:
       vzeroupper()
 
     if self.P > 0:
