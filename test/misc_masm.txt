@@ -51,5 +51,19 @@ jmp rax
 jmp qword ptr [rax]
 call rax
 call qword ptr [rax]
+stack_frame_xmm proc export
+sub rsp, 24
+vmovups xmmword ptr [rsp], xmm6
+vmovups xmm6, xmmword ptr [rsp]
+add rsp, 24
+ret
+stack_frame_xmm endp
+stack_frame_ymm proc export
+vzeroupper
+ret
+stack_frame_ymm endp
+stack_frame_ymm_novzeroupper proc export
+ret
+stack_frame_ymm_novzeroupper endp
 _text$x ends
 end

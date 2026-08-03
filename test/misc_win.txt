@@ -67,3 +67,17 @@ jmp rax
 jmp [rax]
 call rax
 call [rax]
+export stack_frame_xmm
+_global stack_frame_xmm
+sub rsp, 24
+vmovups [rsp], xmm6
+vmovups xmm6, [rsp]
+add rsp, 24
+ret
+export stack_frame_ymm
+_global stack_frame_ymm
+vzeroupper
+ret
+export stack_frame_ymm_novzeroupper
+_global stack_frame_ymm_novzeroupper
+ret

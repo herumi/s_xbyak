@@ -7,7 +7,7 @@ import struct
 import re
 import argparse
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 
 def getDefaultParser(description='s_xbyak'):
   parser = argparse.ArgumentParser(description=description)
@@ -591,7 +591,7 @@ def getSimdSize(vType):
   raise Exception('bad vType', vType)
 
 class StackFrame:
-  def __init__(self, pNum, tNum=0, useRDX=False, useRCX=False, stackSizeByte=0, callRet=True, vNum=0, vType=0):
+  def __init__(self, pNum, tNum=0, useRDX=False, useRCX=False, stackSizeByte=0, callRet=True, vNum=0, vType=0, noVzeroUpper=False):
     """
       make a stackframe of a generated function
       pNum : # of function arguments assigned to self.p[pNum]
@@ -601,7 +601,7 @@ class StackFrame:
       stackSizeByte : stack for local variables assigned to rsp[stackSizeByte]
       callRet : automatically restore registers and call ret()
       vNum : # of SIMD registers
-      vType : SIMD type (T_SSE, T_XMM, T_YMM, T_ZMM)
+      vType : SIMD type (T_XMM, T_YMM, T_ZMM)
     """
     self.pos = 0
     self.useRDX = useRDX
@@ -622,17 +622,18 @@ class StackFrame:
     if vNum > 0 and vType == 0:
       raise Exception('specify vType')
     self.vType = vType
+    self.noVzeroUpper = noVzeroUpper
 
-    maxFreeN = 5 if win64ABI else 32
+    maxFreeN = 6 if win64ABI else 32
     self.maxFreeN = maxFreeN
     saveSimdN = max(vNum - maxFreeN, 0)
     if win64ABI:
-      saveSimdN = min(saveSimdN, 11) # save only xmm6-xmm15
+      saveSimdN = min(saveSimdN, 16 - maxFreeN) # save only xmm6-xmm15
     self.saveSimdN = saveSimdN
     simdSize = getSimdSize(vType)
     self.simdSize = simdSize
     for i in range(vNum):
-      if vType in [T_SSE, T_XMM]:
+      if vType == T_XMM:
         self.v.append(Xmm(i))
       elif vType == T_YMM:
         self.v.append(Ymm(i))
@@ -679,7 +680,7 @@ class StackFrame:
         movups(Xmm(maxFreeN+i), ptr(rsp + self.saveTop + i * XMM_BYTE_SIZE))
       else:
         vmovups(Xmm(maxFreeN+i), ptr(rsp + self.saveTop + i * XMM_BYTE_SIZE))
-    if vType > 0:
+    if not self.noVzeroUpper and vType in [T_YMM, T_ZMM]:
       vzeroupper()
 
     if self.P > 0:
