@@ -627,7 +627,7 @@ class StackFrame:
     self.maxFreeN = maxFreeN
     saveSimdN = max(vNum - maxFreeN, 0)
     if win64ABI:
-      saveSimdN = min(saveSimdN, 10) # save only xmm6-xmm15
+      saveSimdN = min(saveSimdN, 16 - maxFreeN) # save only xmm6-xmm15
     self.saveSimdN = saveSimdN
     simdSize = getSimdSize(vType)
     self.simdSize = simdSize
