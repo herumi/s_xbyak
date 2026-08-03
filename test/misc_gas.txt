@@ -76,3 +76,8 @@ TYPE(stack_frame_ymm)
 vzeroupper
 ret
 SIZE(stack_frame_ymm)
+.global PRE(stack_frame_ymm_novzeroupper)
+PRE(stack_frame_ymm_novzeroupper):
+TYPE(stack_frame_ymm_novzeroupper)
+ret
+SIZE(stack_frame_ymm_novzeroupper)

@@ -591,7 +591,7 @@ def getSimdSize(vType):
   raise Exception('bad vType', vType)
 
 class StackFrame:
-  def __init__(self, pNum, tNum=0, useRDX=False, useRCX=False, stackSizeByte=0, callRet=True, vNum=0, vType=0):
+  def __init__(self, pNum, tNum=0, useRDX=False, useRCX=False, stackSizeByte=0, callRet=True, vNum=0, vType=0, noVzeroUpper=False):
     """
       make a stackframe of a generated function
       pNum : # of function arguments assigned to self.p[pNum]
@@ -622,6 +622,7 @@ class StackFrame:
     if vNum > 0 and vType == 0:
       raise Exception('specify vType')
     self.vType = vType
+    self.noVzeroUpper = noVzeroUpper
 
     maxFreeN = 6 if win64ABI else 32
     self.maxFreeN = maxFreeN
@@ -679,7 +680,7 @@ class StackFrame:
         movups(Xmm(maxFreeN+i), ptr(rsp + self.saveTop + i * XMM_BYTE_SIZE))
       else:
         vmovups(Xmm(maxFreeN+i), ptr(rsp + self.saveTop + i * XMM_BYTE_SIZE))
-    if vType in [T_YMM, T_ZMM]:
+    if not self.noVzeroUpper and vType in [T_YMM, T_ZMM]:
       vzeroupper()
 
     if self.P > 0:

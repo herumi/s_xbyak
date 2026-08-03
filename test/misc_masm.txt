@@ -62,5 +62,8 @@ stack_frame_ymm proc export
 vzeroupper
 ret
 stack_frame_ymm endp
+stack_frame_ymm_novzeroupper proc export
+ret
+stack_frame_ymm_novzeroupper endp
 _text$x ends
 end

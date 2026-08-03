@@ -78,3 +78,6 @@ export stack_frame_ymm
 _global stack_frame_ymm
 vzeroupper
 ret
+export stack_frame_ymm_novzeroupper
+_global stack_frame_ymm_novzeroupper
+ret
