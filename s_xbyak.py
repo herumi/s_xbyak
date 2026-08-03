@@ -601,7 +601,7 @@ class StackFrame:
       stackSizeByte : stack for local variables assigned to rsp[stackSizeByte]
       callRet : automatically restore registers and call ret()
       vNum : # of SIMD registers
-      vType : SIMD type (T_SSE, T_XMM, T_YMM, T_ZMM)
+      vType : SIMD type (T_XMM, T_YMM, T_ZMM)
     """
     self.pos = 0
     self.useRDX = useRDX
@@ -623,16 +623,16 @@ class StackFrame:
       raise Exception('specify vType')
     self.vType = vType
 
-    maxFreeN = 5 if win64ABI else 32
+    maxFreeN = 6 if win64ABI else 32
     self.maxFreeN = maxFreeN
     saveSimdN = max(vNum - maxFreeN, 0)
     if win64ABI:
-      saveSimdN = min(saveSimdN, 11) # save only xmm6-xmm15
+      saveSimdN = min(saveSimdN, 10) # save only xmm6-xmm15
     self.saveSimdN = saveSimdN
     simdSize = getSimdSize(vType)
     self.simdSize = simdSize
     for i in range(vNum):
-      if vType in [T_SSE, T_XMM]:
+      if vType == T_XMM:
         self.v.append(Xmm(i))
       elif vType == T_YMM:
         self.v.append(Ymm(i))

@@ -106,6 +106,14 @@ def miscTest():
   call(rax)
   call(ptr(rax))
 
+def stackFrameTest():
+  with FuncProc('stack_frame_xmm'):
+    with StackFrame(0, vNum=7, vType=T_XMM):
+      pass
+  with FuncProc('stack_frame_ymm'):
+    with StackFrame(0, vNum=1, vType=T_YMM):
+      pass
+
 def runTest():
   jmp(rax)
   jmp(ptr(rax))
@@ -151,6 +159,7 @@ def main():
     runTest()
   else:
     miscTest()
+    stackFrameTest()
 
   term()
 

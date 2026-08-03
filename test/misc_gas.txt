@@ -65,3 +65,14 @@ jmp *%rax
 jmp *(%rax)
 call *%rax
 call *(%rax)
+.global PRE(stack_frame_xmm)
+PRE(stack_frame_xmm):
+TYPE(stack_frame_xmm)
+ret
+SIZE(stack_frame_xmm)
+.global PRE(stack_frame_ymm)
+PRE(stack_frame_ymm):
+TYPE(stack_frame_ymm)
+vzeroupper
+ret
+SIZE(stack_frame_ymm)
