@@ -65,6 +65,11 @@ jmp *%rax
 jmp *(%rax)
 call *%rax
 call *(%rax)
+.global PRE(stack_frame_sse)
+PRE(stack_frame_sse):
+TYPE(stack_frame_sse)
+ret
+SIZE(stack_frame_sse)
 .global PRE(stack_frame_xmm)
 PRE(stack_frame_xmm):
 TYPE(stack_frame_xmm)
@@ -81,3 +86,14 @@ PRE(stack_frame_ymm_novzeroupper):
 TYPE(stack_frame_ymm_novzeroupper)
 ret
 SIZE(stack_frame_ymm_novzeroupper)
+.global PRE(stack_frame_ymm_save)
+PRE(stack_frame_ymm_save):
+TYPE(stack_frame_ymm_save)
+vzeroupper
+ret
+SIZE(stack_frame_ymm_save)
+.global PRE(stack_frame_ymm_save_novzeroupper)
+PRE(stack_frame_ymm_save_novzeroupper):
+TYPE(stack_frame_ymm_save_novzeroupper)
+ret
+SIZE(stack_frame_ymm_save_novzeroupper)

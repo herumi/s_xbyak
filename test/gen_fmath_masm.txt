@@ -14,16 +14,16 @@ _text$x segment align(64) execute
 align 16
 fmath_exp_v_avx512 proc export
 sub rsp, 168
-vmovups xmmword ptr [rsp], xmm6
-vmovups xmmword ptr [rsp+16], xmm7
-vmovups xmmword ptr [rsp+32], xmm8
-vmovups xmmword ptr [rsp+48], xmm9
-vmovups xmmword ptr [rsp+64], xmm10
-vmovups xmmword ptr [rsp+80], xmm11
-vmovups xmmword ptr [rsp+96], xmm12
-vmovups xmmword ptr [rsp+112], xmm13
-vmovups xmmword ptr [rsp+128], xmm14
-vmovups xmmword ptr [rsp+144], xmm15
+movaps xmmword ptr [rsp], xmm6
+movaps xmmword ptr [rsp+16], xmm7
+movaps xmmword ptr [rsp+32], xmm8
+movaps xmmword ptr [rsp+48], xmm9
+movaps xmmword ptr [rsp+64], xmm10
+movaps xmmword ptr [rsp+80], xmm11
+movaps xmmword ptr [rsp+96], xmm12
+movaps xmmword ptr [rsp+112], xmm13
+movaps xmmword ptr [rsp+128], xmm14
+movaps xmmword ptr [rsp+144], xmm15
 mov r10, rcx
 vbroadcastss zmm18, dword ptr log2_e
 vbroadcastss zmm12, dword ptr exp_coef
@@ -129,17 +129,17 @@ vfmadd213ps zmm2, zmm0, zmm12
 vscalefps zmm0, zmm2, zmm1
 vmovups zmmword ptr [r10]{k1}, zmm0
 @L6:
-vmovups xmm6, xmmword ptr [rsp]
-vmovups xmm7, xmmword ptr [rsp+16]
-vmovups xmm8, xmmword ptr [rsp+32]
-vmovups xmm9, xmmword ptr [rsp+48]
-vmovups xmm10, xmmword ptr [rsp+64]
-vmovups xmm11, xmmword ptr [rsp+80]
-vmovups xmm12, xmmword ptr [rsp+96]
-vmovups xmm13, xmmword ptr [rsp+112]
-vmovups xmm14, xmmword ptr [rsp+128]
-vmovups xmm15, xmmword ptr [rsp+144]
 vzeroupper
+movaps xmm6, xmmword ptr [rsp]
+movaps xmm7, xmmword ptr [rsp+16]
+movaps xmm8, xmmword ptr [rsp+32]
+movaps xmm9, xmmword ptr [rsp+48]
+movaps xmm10, xmmword ptr [rsp+64]
+movaps xmm11, xmmword ptr [rsp+80]
+movaps xmm12, xmmword ptr [rsp+96]
+movaps xmm13, xmmword ptr [rsp+112]
+movaps xmm14, xmmword ptr [rsp+128]
+movaps xmm15, xmmword ptr [rsp+144]
 add rsp, 168
 ret
 fmath_exp_v_avx512 endp

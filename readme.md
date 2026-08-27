@@ -202,6 +202,57 @@ Commentaries:
 - `jnz(lpL)`
   - Jump to lpL if non-zero.
 
+# StackFrame
+
+`StackFrame` makes a stack frame of a function according to the ABI (AMD64 or Win64) and releases it at the end of the `with` block.
+
+```python
+StackFrame(pNum, tNum=0, useRDX=False, useRCX=False, stackSizeByte=0, callRet=True, vNum=0, vType=0, noVzeroupper=False)
+```
+
+- `pNum` : number of integer arguments of the function. `sf.p[0]`, ..., `sf.p[pNum-1]` are the corresponding registers (max 4).
+- `tNum` : number of temporary registers. `sf.t[0]`, ..., `sf.t[tNum-1]` are assigned and callee-saved registers are pushed/popped automatically.
+- `useRDX` : set True if you want to use `rdx`. The argument assigned to `rdx` (if any) is moved to `r11`.
+- `useRCX` : set True if you want to use `rcx`. The argument assigned to `rcx` (if any) is moved to `r10`.
+- `stackSizeByte` : size of a local stack area. `ptr(rsp)`, ..., `ptr(rsp + stackSizeByte - 1)` are available.
+- `callRet` : call `ret()` automatically at the end of the `StackFrame` (default True).
+- `vNum` : number of SIMD registers. `sf.v[0]`, ..., `sf.v[vNum-1]` are assigned from the register of index 0 in order.
+- `vType` : type of SIMD registers. It is required if `vNum > 0`.
+- `noVzeroupper` : suppress `vzeroupper` in the epilog. It requires `vType=T_YMM` or `T_ZMM`.
+
+vType | sf.v[i] | meaning | max vNum
+-|-|-|-
+`T_SSE` | `Xmm(i)` | declare that only SSE instructions are used | 16
+`T_XMM` | `Xmm(i)` | use xmm registers with AVX/AVX-512 instructions | 32
+`T_YMM` | `Ymm(i)` | use ymm registers | 32
+`T_ZMM` | `Zmm(i)` | use zmm registers | 32
+
+- On Win64, the lower 128 bits of xmm6-xmm15 are callee-saved, so if `vNum >= 7` then xmm6, ..., xmm(min(vNum, 16)-1) are saved in the prolog and restored in the epilog. Nothing is saved on AMD64 (Linux, macOS) because all SIMD registers are volatile.
+- If `vType` is `T_YMM` or `T_ZMM`, then `vzeroupper` is inserted at the top of the epilog (before restoring the xmm registers) to avoid AVX-SSE transition penalties. Set `noVzeroupper=True` to suppress it, e.g., when the function returns a value in ymm0/zmm0.
+- The save/restore instruction is `movaps` if `vzeroupper` is emitted or `vType=T_SSE`, otherwise (`T_XMM` or `noVzeroupper=True`) `vmovaps` to avoid executing a legacy SSE instruction while the upper state may be dirty.
+
+`StackFrame` raises an exception if `vNum > 0` without `vType`, if `vNum` exceeds the max value of the table, or if `noVzeroupper=True` is specified with `vType` other than `T_YMM`/`T_ZMM`.
+
+Example (nasm + Win64):
+```python
+with FuncProc('sum8'):
+  with StackFrame(2, vNum=8, vType=T_ZMM) as sf:
+    # sf.p[0], sf.p[1] : arguments, sf.v[0], ..., sf.v[7] : zmm0, ..., zmm7
+    ...
+```
+```nasm
+sum8:
+sub rsp, 40
+movaps [rsp], xmm6
+movaps [rsp+16], xmm7
+...
+vzeroupper
+movaps xmm6, [rsp]
+movaps xmm7, [rsp+16]
+add rsp, 40
+ret
+```
+
 # Mnemonics
 
 Most of the mnemonics are the same as defined in the Intel manual except for `and_`, `or_`, `xor_`, `not_`, `in_`, `out_`, `int_`.

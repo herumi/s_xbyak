@@ -106,7 +106,25 @@ def miscTest():
   call(rax)
   call(ptr(rax))
 
+def stackFrameErrorTest():
+  def assertRaise(f):
+    ok = False
+    try:
+      f()
+    except Exception:
+      ok = True
+    if not ok:
+      raise Exception('no exception')
+  assertRaise(lambda: StackFrame(0, vNum=1)) # vType is not specified
+  assertRaise(lambda: StackFrame(0, vNum=17, vType=T_SSE)) # SSE can not access xmm16 or above
+  assertRaise(lambda: StackFrame(0, vNum=33, vType=T_XMM)) # too large vNum
+  assertRaise(lambda: StackFrame(0, vNum=1, vType=T_XMM, noVzeroupper=True)) # noVzeroupper requires T_YMM or T_ZMM
+  assertRaise(lambda: StackFrame(0, vNum=1, vType=T_SSE, noVzeroupper=True)) # noVzeroupper requires T_YMM or T_ZMM
+
 def stackFrameTest():
+  with FuncProc('stack_frame_sse'):
+    with StackFrame(0, vNum=7, vType=T_SSE):
+      pass
   with FuncProc('stack_frame_xmm'):
     with StackFrame(0, vNum=7, vType=T_XMM):
       pass
@@ -114,7 +132,13 @@ def stackFrameTest():
     with StackFrame(0, vNum=1, vType=T_YMM):
       pass
   with FuncProc('stack_frame_ymm_novzeroupper'):
-    with StackFrame(0, vNum=1, vType=T_YMM, noVzeroUpper=True):
+    with StackFrame(0, vNum=1, vType=T_YMM, noVzeroupper=True):
+      pass
+  with FuncProc('stack_frame_ymm_save'):
+    with StackFrame(0, vNum=7, vType=T_YMM):
+      pass
+  with FuncProc('stack_frame_ymm_save_novzeroupper'):
+    with StackFrame(0, vNum=7, vType=T_YMM, noVzeroupper=True):
       pass
 
 def runTest():
@@ -149,6 +173,7 @@ def main():
   # before calling init()
   maskTest()
   cvtTest()
+  stackFrameErrorTest()
 
   parser = getDefaultParser()
   parser.add_argument('-run', help='run runTest', action='store_true')
