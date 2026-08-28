@@ -2,6 +2,10 @@ __pycache__
 test/a.txt
 test/b.txt
 test/c.txt
+gen/sdm.txt
+gen/avx.txt
+gen/tbl.py
+gen/sdm-all.txt
 *.obj
 *.lst
 *.o
