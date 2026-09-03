@@ -14,10 +14,32 @@ test:
 	make test1 FILE=gen_fmath
 	make test1 FILE=string
 	make test1 FILE=misc
+	make test1_llvm FILE=gen_ff
 #	$(PYTHON) misc.py
 
 update:
 	$(MAKE) test UPDATE=1
+
+# golden tests for s_xbyak_llvm.py (LLVM-IR): 64-bit unit, 32-bit unit and C prototype
+LLVM_OPT_64=-u 64 -type BLS12-381-p -add -sub -mul
+LLVM_OPT_32=-u 32 -type BLS12-381-p -add -sub -mul
+LLVM_OPT_PROTO=-u 64 -proto
+
+update1_llvm:
+ifeq ($(UPDATE),1)
+	$(PYTHON) $(FILE).py $(LLVM_OPT_64) > $(FILE)_64.txt
+	$(PYTHON) $(FILE).py $(LLVM_OPT_32) > $(FILE)_32.txt
+	$(PYTHON) $(FILE).py $(LLVM_OPT_PROTO) > $(FILE)_proto.txt
+endif
+
+test1_llvm:
+	$(MAKE) update1_llvm
+	$(PYTHON) $(FILE).py $(LLVM_OPT_64) > a.txt
+	diff $(DIFF_OPT) $(FILE)_64.txt a.txt
+	$(PYTHON) $(FILE).py $(LLVM_OPT_32) > b.txt
+	diff $(DIFF_OPT) $(FILE)_32.txt b.txt
+	$(PYTHON) $(FILE).py $(LLVM_OPT_PROTO) > c.txt
+	diff $(DIFF_OPT) $(FILE)_proto.txt c.txt
 
 test_misc:
 	$(PYTHON) misc.py

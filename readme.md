@@ -302,6 +302,48 @@ mov(rax, ptr(rip+'varX'))`
   - `vcvtpd2dq(xmm21, ptr_b (eax+32))` # `m128` + broadcast
   - `vcvtpd2dq(xmm19, yword_b (eax+32))` # `m256` + broadcast
 
+# s_xbyak_llvm.py
+
+`s_xbyak_llvm.py` is a sibling DSL that generates LLVM-IR (text) instead of x64 assembly.
+It is a single file with no dependency on `s_xbyak.py`; copy it next to your generator and `from s_xbyak_llvm import *`.
+
+```python
+import sys
+import argparse
+sys.path.append('../')
+from s_xbyak_llvm import *
+
+def main():
+  parser = argparse.ArgumentParser()
+  parser.add_argument('-proto', action='store_true', default=False, help='show C prototype')
+  opt = parser.parse_args()
+  init()
+  if opt.proto:
+    showPrototype()
+
+  # a function defined in another module: emit `declare i64 @ext_f(i64)`
+  ext_f = Function('ext_f', Int(64), Int(64))
+  declare(ext_f)
+
+  # `define i64 @add3(i64, i64, i64)`; the header is emitted on entering `with`
+  x = Int(64)
+  y = Int(64)
+  z = Int(64)
+  with Function('add3', Int(64), x, y, z):
+    t = add(add(x, y), z)
+    r = call(ext_f, t)
+    ret(r)
+
+  term()
+
+if __name__ == '__main__':
+  main()
+```
+
+- `Function(name, ret, *args)` only records the signature. Entering the `with` block emits the `define` header (or the C prototype in `-proto` mode) and leaving it emits `}`.
+- `declare(f)` emits a `declare` line for a `Function` defined elsewhere (nothing in `-proto` mode).
+- Operands are `Int(bit)`, `IntPtr(bit)`, `Imm(v)` and the values returned by `add`, `mul`, `zext`, `load`, `call`, `select`, `icmp`, `phi`, etc. Multi-limb helpers: `loadN`, `storeN`, `makeVar`.
+
 # License
 
 [modified new BSD License](http://opensource.org/licenses/BSD-3-Clause)

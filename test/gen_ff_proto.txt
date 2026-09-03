@@ -1,0 +1,12 @@
+const uint8_t* mcl_fp_get_prime();
+void mcl_fp_add(uint64_t*, const uint64_t*, const uint64_t*);
+void mcl_fp2_add(uint64_t*, const uint64_t*, const uint64_t*);
+void mcl_fp_sub(uint64_t*, const uint64_t*, const uint64_t*);
+void mcl_fp2_sub(uint64_t*, const uint64_t*, const uint64_t*);
+void mcl_fp_mul(uint64_t*, const uint64_t*, const uint64_t*);
+void mcl_fp_sqr(uint64_t*, const uint64_t*);
+void mcl_fp_mod(uint64_t*, const uint64_t*);
+void mcl_fp_mulPre(uint64_t*, const uint64_t*, const uint64_t*);
+void mcl_fp_sqrPre(uint64_t*, const uint64_t*);
+void mcl_fp2_mul(uint64_t*, const uint64_t*, const uint64_t*);
+void mcl_fp2_sqr(uint64_t*, const uint64_t*);

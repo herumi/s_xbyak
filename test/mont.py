@@ -7,6 +7,7 @@ class Montgomery:
     self.p = p
     self.pbit = p.bit_length()
     self.L = L
+    self.L2 = L*2
     self.mask = (1<<L) - 1
     self.ip = self.getCoeff()
     self.pn = (self.pbit + L - 1) // L

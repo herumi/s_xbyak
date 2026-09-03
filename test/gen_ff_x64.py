@@ -1,6 +1,5 @@
 import sys
 sys.path.append('../')
-sys.path.append('../../../mcl-ff/')
 from s_xbyak import *
 from primetbl import *
 from mont import *
