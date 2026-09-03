@@ -7,7 +7,7 @@ import struct
 import re
 import argparse
 
-VERSION="1.3.0"
+VERSION="1.4.0"
 SDM_VERSION="325383-092"
 
 def getDefaultParser(description='s_xbyak'):
@@ -617,11 +617,8 @@ class StackFrame:
     allRegNum = pNum + tNum + (1 if useRDX else 0) + (1 if useRCX else 0)
     noSaveNum = getNoSaveNum()
     self.saveNum = max(0, allRegNum - noSaveNum)
-    tbl = getRegTbl()[noSaveNum:]
-    for i in range(self.saveNum):
-      push(tbl[i])
+    self.tbl = getRegTbl()[noSaveNum:]
 
-    # restore SIMD registers
     if vNum > 0 and vType == 0:
       raise Exception('specify vType')
     if vType == T_SSE and vNum > 16:
@@ -659,23 +656,30 @@ class StackFrame:
     if self.P > 0 and (self.P & 1) == (self.saveNum & 1):
       self.P += 1
     self.P *= 8
-    if self.P > 0:
-      sub(rsp, self.P)
-
-    # store SIMD registers
-    for i in range(saveSimdN):
-      if self.useVmovaps:
-        vmovaps(ptr(rsp + self.saveTop + i * XMM_BYTE_SIZE), Xmm(maxFreeN+i))
-      else:
-        movaps(ptr(rsp + self.saveTop + i * XMM_BYTE_SIZE), Xmm(maxFreeN+i))
+    self.pNum = pNum
     for i in range(pNum):
       self.p.append(self.getRegIdx())
     for i in range(tNum):
       self.t.append(self.getRegIdx())
-    if self.useRCX and getRcxPos() < pNum:
+
+  # emit the prologue (save registers, allocate the stack, move rcx/rdx)
+  # when entering the with block; the constructor emits nothing
+  def __enter__(self):
+    for i in range(self.saveNum):
+      push(self.tbl[i])
+    if self.P > 0:
+      sub(rsp, self.P)
+    # store SIMD registers
+    for i in range(self.saveSimdN):
+      if self.useVmovaps:
+        vmovaps(ptr(rsp + self.saveTop + i * XMM_BYTE_SIZE), Xmm(self.maxFreeN+i))
+      else:
+        movaps(ptr(rsp + self.saveTop + i * XMM_BYTE_SIZE), Xmm(self.maxFreeN+i))
+    if self.useRCX and getRcxPos() < self.pNum:
       mov(r10, rcx)
-    if self.useRDX and getRdxPos() < pNum:
+    if self.useRDX and getRdxPos() < self.pNum:
       mov(r11, rdx)
+    return self
   def close(self, callRet=True):
     if self.isCalledClose:
       return
@@ -700,8 +704,6 @@ class StackFrame:
       pop(tbl[i])
     if callRet:
       ret()
-  def __enter__(self):
-    return self
   def __exit__(self, ex_type, ex_value, trace):
     self.close(self.callRet)
 
@@ -994,28 +996,28 @@ def Pack(*args):
   a.reverse()
   return a
 
+# FuncProc only holds the name; the function header is emitted when entering
+# the with block and the footer when leaving it
 class FuncProc:
   def __init__(self, name):
     self.name = name
+  def __enter__(self):
+    name = self.name
     if g_masm:
-      output(f'{self.name} proc export')
-      return
-    if g_nasm:
+      output(f'{name} proc export')
+    elif g_nasm:
       if win64ABI:
         output(f'export {name}')
       global_(name)
-      return
-    if g_gas:
+    elif g_gas:
       global_(name)
-      output(f'TYPE({self.name})')
-      return
+      output(f'TYPE({name})')
+    return self
   def close(self):
     if g_masm:
       output(f'{self.name} endp')
     if g_gas:
       output(f'SIZE({self.name})')
-  def __enter__(self):
-    return self
   def __exit__(self, ex_type, ex_value, trace):
     self.close()
 
